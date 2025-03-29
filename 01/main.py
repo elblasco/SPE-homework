@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import numpy as np
 import matplotlib.pyplot as plt
 from random import choices
@@ -28,8 +27,6 @@ if __name__ == "__main__":
 
 
     print("COMPUTING...")
-
-
     for _ in range(RANGE):
         mu, sigma = choices(list(zip(choice_mean, choice_var)), choice_prob)[0]
         vals.append(rng.normal(mu, sigma))
@@ -40,6 +37,3 @@ if __name__ == "__main__":
     fig, ax = plt.subplots()
     ax.hist(vals, linewidth=0.5, edgecolor="white", bins=40)
     plt.show()
-
-
-
