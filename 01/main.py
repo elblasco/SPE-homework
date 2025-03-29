@@ -18,7 +18,7 @@ if __name__ == "__main__":
     expected_mean = sum(v * p for v, p in zip(choice_mean, choice_prob))
 
     expected_var = (sum((mean - expected_mean)**2 * p  for mean, p in zip(choice_mean, choice_prob))
-        + sum((var * p) for var, p in zip(choice_mean, choice_prob)))
+        + sum(var * p for var, p in zip(choice_var, choice_prob)))
 
     print(expected_mean)
     print(expected_var)
