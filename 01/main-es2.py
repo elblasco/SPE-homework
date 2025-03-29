@@ -2,7 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-RANGE = 1000000
+RANGE = 100000
 
 if __name__ == "__main__":
     vals_exp: list = []
