@@ -10,7 +10,7 @@ if __name__ == "__main__":
     probability_vector: list = [0.15, 0.25, 0.35, 0.25]
     extracted_values: list = []
     rng: np.random.Generator = np.random.default_rng()
-    for _ in range(2000000):
+    for _ in range(10000000):
         mu, sigma = choices(
             random_values, probability_vector, k=1
         )[0]
@@ -19,9 +19,22 @@ if __name__ == "__main__":
         )
     print(np.mean(extracted_values))
     print(np.var(extracted_values))
+
+    # Calculate expected
+    print("EXPECTED ARE:")
+    expected_mean = -2 * 0.15 + 4 * 0.25 + 10 * 0.35 + 15 * 0.25
+    expected_var = (((-2 - expected_mean)*(-2 - expected_mean)*0.15 + (4 - expected_mean)*(4 - expected_mean)*0.25
+                    + (10 - expected_mean)*(10 - expected_mean)*0.35 + (15 - expected_mean)*(15 - expected_mean)*0.25)
+                    + (sqrt(2) * 0.15 + 1 * 0.25 + sqrt(3) * 0.35 + sqrt(2) * 0.25))
+    print(expected_mean)
+    print(expected_var)
+
     bins = np.linspace(ceil(min(extracted_values)),
                        floor(max(extracted_values)),
                        40)  # fixed number of bins
     fig, ax = plt.subplots()
     ax.hist(extracted_values, linewidth=0.5, edgecolor="white", bins=bins)
     plt.show()
+
+
+
