@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from random import choices
 
-RANGE = 100000
+RANGE = 1000000
 
 def compute_mean(values, probs):
     return sum(v * p for v, p in zip(values, probs))
@@ -32,8 +32,8 @@ if __name__ == "__main__":
 
     print("COMPUTING...")
     for _ in range(RANGE):
-        mu, sigma = choices(list(zip(choice_mean, choice_var)), choice_prob)[0]
-        vals.append(rng.normal(mu, sigma))
+        mu, var = choices(list(zip(choice_mean, choice_var)), choice_prob)[0]
+        vals.append(rng.normal(mu, np.sqrt(var)))
     print(np.mean(vals))
     print(np.var(vals))
 
