@@ -6,6 +6,9 @@ from random import choices
 
 RANGE = 10000000
 
+def compute_mean(values, probs):
+    return sum(v * p for v, p in zip(values, probs))
+
 if __name__ == "__main__":
     choice_mean = [-2, 4, 10, 15]
     choice_var = [2, 1, 3, 2]
@@ -15,10 +18,10 @@ if __name__ == "__main__":
 
 
     print("EXPECTED ARE:")
-    expected_mean = sum(v * p for v, p in zip(choice_mean, choice_prob))
+    expected_mean = compute_mean(choice_mean, choice_prob)
 
-    expected_var = (sum((mean - expected_mean)**2 * p  for mean, p in zip(choice_mean, choice_prob))
-        + sum(var * p for var, p in zip(choice_var, choice_prob)))
+    expected_var = (compute_mean(map(lambda mean: (mean - expected_mean)**2, choice_mean), choice_prob)
+        + compute_mean(choice_var, choice_prob))
 
     print(expected_mean)
     print(expected_var)
