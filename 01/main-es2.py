@@ -10,7 +10,7 @@ if __name__ == "__main__":
     extracted_uni: list = []
     rng: np.random.Generator = np.random.default_rng()
 
-    RANGE = 10000000
+    RANGE = 1000000
     for _ in range(RANGE):
         extracted_exp.append(
             rng.exponential(1)
@@ -19,12 +19,20 @@ if __name__ == "__main__":
             rng.uniform(0, 5)
         )
 
-    greater = 0
-    for i in range(RANGE):
-        if (extracted_exp[i] > extracted_uni[i]):
-            greater = greater + 1
+    greater = sum(
+        1
+        for i in range(RANGE)
+        if extracted_exp[i] > extracted_uni[i]
+    )
 
+    print(np.mean(extracted_exp))
+    print(np.mean(extracted_uni))
     print(greater / RANGE)
+
+    fig, ax = plt.subplots()
+    ax.hist(extracted_exp)
+    ax.hist(extracted_uni)
+    plt.show()
 
 
 

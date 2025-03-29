@@ -7,12 +7,12 @@ from random import choices
 
 if __name__ == "__main__":
     random_values: list = [(-2, sqrt(2)), (4, 1), (10, sqrt(3)), (15, sqrt(2))]
-    probability_vector: list = [0.15, 0.25, 0.35, 0.25]
+    probabilities: list = [0.15, 0.25, 0.35, 0.25]
     extracted_values: list = []
     rng: np.random.Generator = np.random.default_rng()
-    for _ in range(10000000):
+    for _ in range(1000000):
         mu, sigma = choices(
-            random_values, probability_vector, k=1
+            random_values, probabilities, k=1
         )[0]
         extracted_values.append(
             rng.normal(mu, sigma, 1)[0]
@@ -22,10 +22,11 @@ if __name__ == "__main__":
 
     # Calculate expected
     print("EXPECTED ARE:")
-    expected_mean = -2 * 0.15 + 4 * 0.25 + 10 * 0.35 + 15 * 0.25
-    expected_var = (((-2 - expected_mean)*(-2 - expected_mean)*0.15 + (4 - expected_mean)*(4 - expected_mean)*0.25
-                    + (10 - expected_mean)*(10 - expected_mean)*0.35 + (15 - expected_mean)*(15 - expected_mean)*0.25)
-                    + (sqrt(2) * 0.15 + 1 * 0.25 + sqrt(3) * 0.35 + sqrt(2) * 0.25))
+    expected_mean = sum(v * p for v, p in zip(list(zip(*random_values))[0], probabilities))
+
+    expected_var = (((-2 - expected_mean)**2*0.15 + (4 - expected_mean)**2*0.25
+                    + (10 - expected_mean)**2*0.35 + (15 - expected_mean)**2*0.25)
+                    + (2 * 0.15 + 1 * 0.25 + 3 * 0.35 + 2 * 0.25))
     print(expected_mean)
     print(expected_var)
 
