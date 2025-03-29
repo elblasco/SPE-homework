@@ -8,9 +8,9 @@ RANGE = 100000
 def compute_mean(values, probs):
     return sum(v * p for v, p in zip(values, probs))
 
-def compute_var(values, expected_val, probs):
-    diff_squared = map(lambda x: (x - expected_val)**2, values)
-    return compute_mean(diff_squared, probs)
+def compute_var(values,  probs):
+    squared = map(lambda x: x**2, values)
+    return compute_mean(squared, probs) - compute_mean(values, probs)**2
 
 if __name__ == "__main__":
     choice_mean = [-2, 4, 10, 15]
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     print("EXPECTED ARE:")
     expected_mean = compute_mean(choice_mean, choice_prob)
 
-    expected_var = (compute_var(choice_mean, expected_mean, choice_prob)
+    expected_var = (compute_var(choice_mean, choice_prob)
         + compute_mean(choice_var, choice_prob))
 
     print(expected_mean)
