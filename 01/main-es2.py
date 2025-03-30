@@ -2,13 +2,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-RANGE = 100000
+RANGE = 1000000
 
 if __name__ == "__main__":
     vals_exp: list = []
     vals_uni: list = []
-    rng = np.random.default_rng()
 
+
+    rng = np.random.default_rng()
     for _ in range(RANGE):
         vals_exp.append(rng.exponential(1))
         vals_uni.append(rng.uniform(0, 5))
@@ -21,6 +22,7 @@ if __name__ == "__main__":
 
 
     fig, ax = plt.subplots()
-    ax.hist(vals_exp, linewidth=0.5, edgecolor="white", bins=40)
-    ax.hist(vals_uni, linewidth=0.5, edgecolor="white", bins=40)
+    line1 = ax.hist(vals_exp, linewidth=0.5, edgecolor="white", bins=40, label='Exponential R.V.')
+    line2 = ax.hist(vals_uni, linewidth=0.5, edgecolor="white", bins=40, label='Uniform R.V.')
+    ax.legend()
     plt.show()

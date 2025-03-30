@@ -17,20 +17,18 @@ if __name__ == "__main__":
     choice_var = [2, 1, 3, 2]
     choice_prob = [0.15, 0.25, 0.35, 0.25]
     vals = []
-    rng = np.random.default_rng()
 
 
     print("EXPECTED ARE:")
     expected_mean = compute_mean(choice_mean, choice_prob)
-
     expected_var = (compute_var(choice_mean, choice_prob)
         + compute_mean(choice_var, choice_prob))
-
     print(expected_mean)
     print(expected_var)
 
 
     print("COMPUTING...")
+    rng = np.random.default_rng()
     for _ in range(RANGE):
         mu, var = choices(list(zip(choice_mean, choice_var)), choice_prob)[0]
         vals.append(rng.normal(mu, np.sqrt(var)))
