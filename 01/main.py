@@ -1,27 +1,43 @@
 #!/usr/bin/env python3
-
 import numpy as np
 import matplotlib.pyplot as plt
-from math import sqrt, ceil, floor
 from random import choices
 
+RANGE = 1000000
+
+def compute_mean(values, probs):
+    return sum(v * p for v, p in zip(values, probs))
+
+def compute_var(values,  probs):
+    squared = map(lambda x: x**2, values)
+    return compute_mean(squared, probs) - compute_mean(values, probs)**2
+
 if __name__ == "__main__":
-    random_values: list = [(-2, sqrt(2)), (4, 1), (10, sqrt(3)), (15, sqrt(2))]
-    probability_vector: list = [0.15, 0.25, 0.35, 0.25]
-    extracted_values: list = []
-    rng: np.random.Generator = np.random.default_rng()
-    for _ in range(2000000):
-        mu, sigma = choices(
-            random_values, probability_vector, k=1
-        )[0]
-        extracted_values.append(
-            rng.normal(mu, sigma, 1)[0]
-        )
-    print(np.mean(extracted_values))
-    print(np.var(extracted_values))
-    bins = np.linspace(ceil(min(extracted_values)),
-                       floor(max(extracted_values)),
-                       40)  # fixed number of bins
+    choice_mean = [-2, 4, 10, 15]
+    choice_var = [2, 1, 3, 2]
+    choice_prob = [0.15, 0.25, 0.35, 0.25]
+    vals = []
+    rng = np.random.default_rng()
+
+
+    print("EXPECTED ARE:")
+    expected_mean = compute_mean(choice_mean, choice_prob)
+
+    expected_var = (compute_var(choice_mean, choice_prob)
+        + compute_mean(choice_var, choice_prob))
+
+    print(expected_mean)
+    print(expected_var)
+
+
+    print("COMPUTING...")
+    for _ in range(RANGE):
+        mu, var = choices(list(zip(choice_mean, choice_var)), choice_prob)[0]
+        vals.append(rng.normal(mu, np.sqrt(var)))
+    print(np.mean(vals))
+    print(np.var(vals))
+
+
     fig, ax = plt.subplots()
-    ax.hist(extracted_values, linewidth=0.5, edgecolor="white", bins=bins)
+    ax.hist(vals, linewidth=0.5, edgecolor="white", bins=40)
     plt.show()
