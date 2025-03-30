@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
 
     fig, ax = plt.subplots()
-    line1 = ax.hist(vals_exp, linewidth=0.5, edgecolor="white", bins=40, label='Exponential R.V.')
-    line2 = ax.hist(vals_uni, linewidth=0.5, edgecolor="white", bins=40, label='Uniform R.V.')
+    line1 = ax.hist(vals_exp, linewidth=0.5, edgecolor="darkblue", bins=40, label='Exponential R.V.')
+    line2 = ax.hist(vals_uni, linewidth=0.5, edgecolor="darkorange", bins=40, label='Uniform R.V.', alpha=0.7)
     ax.legend()
     plt.show()
