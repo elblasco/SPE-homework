@@ -81,7 +81,7 @@
   \end{lstlisting}
 \end{center}
 
-This is the simulation we run to firstly extract randomly the normal distribution parameters line 11, from \texttt{choice\_var} and \texttt{choice\_mean}, with the probability vector \texttt{choice\_prob}. Then we generate a sample from the created normal distribution, this sample is appended to a vector of values collecting all the sampling, The parameters pick and the sampling process was repeated \(1000000\) times. On the resulting vector of values we computed arithmetic mean and arithmetic variance, line 13 and line 14. 
+This is the simulation we run to firstly extract randomly the normal distribution parameters, line 11, from \texttt{choice\_var} and \texttt{choice\_mean}, with the probability vector \texttt{choice\_prob}. Then we generate a sample from the created normal distribution, this sample is appended to a vector of values collecting all the sampling, The parameters pick and the sampling process was repeated \(1000000\) times. On the resulting vector of values we computed arithmetic mean and arithmetic variance, line 13 and line 14. 
 
 \begin{center}
   \begin{lstlisting}[language=python]
@@ -158,15 +158,17 @@ We used the above code to generate \(1000000\) draws from each distribution. We 
 \subsection*{Facultative}
 
 Let \(X\sim\text{Exp}(\lambda = 1)\) and let \(Y\sim U(0,5)\), this exercise ask to quantify \(P(X>Y)\). We have:
-\begin{equation}
-  \label{eq:1}
-  f_{X}(x) = e^{-x} \quad\textrm{,}\quad F_{X}(x) = 1 - e^{-x} \quad\textrm{,}\quad f_{Y}(y)=\frac{1}{5}  \quad\textrm{and}\quad F_{Y}(y) = \frac{y}{5}
-\end{equation}
+\begin{align}
+  \label{eq:1.1}
+  f_{X}(x) = e^{-x} \quad\textrm{and}\quad F_{X}(x) = 1 - e^{-x} \quad&\textrm{with}\quad x\in\left[0,\infty\right)\\
+  \label{eq:1.2}
+  f_{Y}(y)=\frac{1}{5} \quad\textrm{and}\quad F_{Y}(y) = \frac{y}{5}\quad&\textrm{with}\quad y\in\left[0, 5\right]
+\end{align}
 We can now define:
 \begin{equation*}
   P(X>Y) = \int^{5}_{0}{P(X>y)F_{Y}(y)dy} + \int^{\infty}_{5}{f_{X}(x)dx}
 \end{equation*}
-Our goal can be decompose in, the probability that \(X\) is greater than a given value \(y\) plus the probability that the exponential random variable has a value greater than \(5\). We can simply the above formula using the definition of probability and the definitions in~\ref{eq:1}.
+Our goal can be decompose in, the probability that \(X\) is greater than a given value \(y\) plus the probability that the exponential random variable has a value greater than \(5\). We can simply the above formula using the definition of probability and the definitions in~\ref{eq:1.1} and~\ref{eq:1.2}.
 \begin{equation}
   \label{eq:2}
   P(X>Y) = \int^{5}_{0}{(1 - F_{X}(y))\frac{y}{5}}dy + (1 - F_{X}(5)) = \int^{5}_{0}{e^{-y}\frac{y}{5}}dy + e^{-5}
@@ -179,4 +181,5 @@ Applying the above result to~\ref{eq:2}, the aimed probability results in:
 \begin{equation*}
   P(X>Y) = \frac{1-6e^{-5}}{5} + e^{-5} \approx 0.19865 
 \end{equation*}
+This calculated value is in line with the experimental value.
 \end{document}
