@@ -6,6 +6,13 @@ import math
 PI = math.pi
 ETA95 = 1.96
 
+def func_points(function) -> ([float], [float]):
+    x = np.linspace(-3, 3, 1000)
+    y = []
+    for v in x:
+        y.append(function(v))
+    return x, y
+
 def weird_function(x: float) -> float:
     return x**2 * math.sin(x * PI)**2
 
@@ -70,7 +77,8 @@ def main():
     #### Subpoint 1
     y_upper_bound = 6.36 # obtained with WolframAlpha
     samples = []
-    for _ in range(20000):
+    n = 20000
+    for _ in range(n):
         samples.append(sampling_weird(-3, 3, y_upper_bound))
 
     #### Subpoint 3
@@ -85,15 +93,20 @@ def main():
     es4(samples)
 
     ### Subpoint 2
-    x = np.linspace(-3, 3, 1000)
-    y = []
-    for v in x:
-        y.append(weird_integral(v))
+    fig, ax = plt.subplots(1, 2)
 
-    fig, ax = plt.subplots()
-    ax.ecdf(samples, label="experimental")
-    plt.plot(x, y, label="expected")
-    ax.legend()
+    bins=80
+    best_match_scale = n / bins * 0.65
+    ax[0].hist(samples, label="experimental distribution", bins=bins)
+    x_distr, y_distr = func_points(lambda x: weird_function(x) * best_match_scale)
+    ax[0].plot(x_distr, y_distr, label="expected distribution")
+
+    ax[1].ecdf(samples, label="ECDF")
+    x_int, y_int = func_points(weird_integral)
+    ax[1].plot(x_int, y_int, label="expected CDF")
+
+    ax[0].legend()
+    ax[1].legend()
     plt.show()
 
 if __name__ == "__main__":
