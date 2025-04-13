@@ -96,14 +96,13 @@ def main():
     fig, ax = plt.subplots(1, 2)
 
     bins=80
-    best_match_scale = n / bins * 0.65
-    ax[0].hist(samples, label="experimental distribution", bins=bins)
-    x_distr, y_distr = func_points(lambda x: weird_function(x) * best_match_scale)
-    ax[0].plot(x_distr, y_distr, label="expected distribution")
+    ax[0].hist(samples, label="Experimental Distribution", bins=bins, density=True)
+    x_distr, y_distr = func_points(lambda x: weird_function(x) / 8.8480182)
+    ax[0].plot(x_distr, y_distr, label="Expected Distribution")
 
-    ax[1].ecdf(samples, label="ECDF")
+    ax[1].ecdf(samples, label="Experimental CDF")
     x_int, y_int = func_points(weird_integral)
-    ax[1].plot(x_int, y_int, label="expected CDF")
+    ax[1].plot(x_int, y_int, label="Expected CDF")
 
     ax[0].legend()
     ax[1].legend()
