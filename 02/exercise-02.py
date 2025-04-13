@@ -35,41 +35,42 @@ def bootstrap_procedure(array, r0: int, gamma: float, st_func):
         draws = np.random.choice(array, len(array))
         stat_calculated.append(st_func(draws))
     stat_calculated.sort()
-    return stat_calculated[r0], stat_calculated[r + 1 - r0]
+    return float(stat_calculated[r0]), float(stat_calculated[r + 1 - r0])
 
 def es3median(arr_sorted):
-    n = len(arr_sorted)
-    exact_median = np.median(arr_sorted)
-
-    low = math.floor(n / 2 - ETA95 / 2 * math.sqrt(n))
-    up = math.ceil(n / 2 + ETA95 / 2 * math.sqrt(n) + 1)
-    print("Median is", exact_median, "[", arr_sorted[low], ";", arr_sorted[up], "]")
-    print(bootstrap_procedure(arr_sorted, 25, 0.95, np.median))
+    es3quantile(arr_sorted, 0.5)
 
 def es3mean(arr):
     n = len(arr)
     mean = float(np.mean(arr))
     std_dev_mean = float(np.std(arr))
     error_mean = ETA95 * std_dev_mean / math.sqrt(n)
-    print("Mean", mean, "+-", error_mean, "[", (mean - error_mean), ";", (mean + error_mean), "]")
-    print(bootstrap_procedure(arr, 25, 0.95, np.mean))
+    print("Mean", mean, "+-", error_mean,
+          "with CI", (mean - error_mean, mean + error_mean),
+          "\n\tand with bootstrap CI", bootstrap_procedure(arr, 25, 0.95, np.mean))
 
-def es3quantile(arr_sorted, p):
+def es3quantile(arr_sorted, q):
     n = len(arr_sorted)
-    quant = np.quantile(arr_sorted, p)
-    low = math.floor(n * p - ETA95 * math.sqrt(n * p * (1 - p)))
-    up = math.ceil(n * p + ETA95 * math.sqrt(n * p * (1 - p)) + 1)
-    print("The", p, "quantile is", quant, "[", arr_sorted[low], ";", arr_sorted[up], "]")
-    print(bootstrap_procedure(arr_sorted, 25, 0.95, lambda arr: np.quantile(arr, p)))
+    quant = np.quantile(arr_sorted, q)
+    low = math.floor(n * q - ETA95 * math.sqrt(n * q * (1 - q)))
+    up = math.ceil(n * q + ETA95 * math.sqrt(n * q * (1 - q)) + 1)
+    ci_boot = bootstrap_procedure(arr_sorted, 25, 0.95, lambda arr: np.quantile(arr, q))
+
+    if q == 0.5:
+        print("The median is ", end="")
+    else:
+        print("The", q, "quantile is ", end="")
+    print(quant, "with CI", (arr_sorted[low], arr_sorted[up]),
+          "\n\tand with bootstrap CI", ci_boot)
 
 def es4(samples):
-    n = len(samples)
+    n = 200
     correct = 0
-    for subset in np.reshape(samples, (100, 200)):
+    for subset in np.reshape(samples, (100, n)):
         mean = float(np.mean(subset))
         std_dev = float(np.std(subset))
         err = ETA95 * std_dev / math.sqrt(n)
-        if mean - err <= 0 <= mean + err:
+        if (mean - err) <= 0 <= (mean + err):
             correct += 1
     print("True mean is in interval ", correct, "% of the times")
 
