@@ -82,7 +82,7 @@ By plotting~\ref{fig:1}, we compared the obtain distribution against the origina
   \label{fig:1}
 \end{figure}
 
-On the left there is the unscaled graph of the two distributions overlapping perfectly for small \emph{u}s. To emphasise the small errors we used, on the right graph, a logarithmic scale to represent the two exponential distributions. With this representation we saw that the errors were clustered, mostly, on larger values of \emph{u}. This result was expected since, higher values of \emph{u} had a lower sample rate.
+On the left there is the unscaled graph of the two distributions overlapping perfectly for small \emph{u}'s. To emphasise the small errors we used, on the right graph, a logarithmic scale to represent the two exponential distributions. With this representation we saw that the errors were clustered, mostly, on larger values of \emph{u}. This result was expected since, higher values of \emph{u} had a lower sample rate.
 
 \subsubsection*{From Exponential to Uniform}
 
@@ -186,16 +186,4 @@ The function takes in input the sample \texttt{array}, the value \texttt{r0}, th
 \subsubsection*{Sub-point 4}
 
 Since every disjointed set is formed by \(200\) values we decided to use the asymptotic estimation as done before for the mean. Depending on the run, the percentage of sets with an arithmetic mean within the confidentiality interval was \(95\%\pm5\%\) (most of the cases). Which is expected as it is around the confidence level of the confidence interval.
-\begin{lstlisting}[language=python]
-def es4(samples):
-    n = len(samples)
-    correct = 0
-    for subset in np.reshape(samples, (100, 200)):
-        mean = float(np.mean(subset))
-        std_dev = float(np.std(subset))
-        err = ETA95 * std_dev / math.sqrt(n)
-        if mean - err <= 0 <= mean + err:
-            correct += 1
-    print("True mean is in interval ", correct, "% of the times")
-\end{lstlisting}
 \end{document}
