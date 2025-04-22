@@ -82,7 +82,7 @@ By plotting~\ref{fig:1}, we compared the obtain distribution against the origina
   \label{fig:1}
 \end{figure}
 
-On the left there is the unscaled graph of the two distributions overlapping perfectly for small \emph{u}s. To emphasise the small errors we used, on the right graph, a logarithmic scale to represent the two exponential distributions. With this representation we saw that the errors were clustered, mostly, on larger values of \emph{u}. This result was expected since, higher values of \emph{u} had a lower sample rate therefore, they were less subject to the ``Law of Large Numbers''.
+On the left there is the unscaled graph of the two distributions overlapping perfectly for small \emph{u}s. To emphasise the small errors we used, on the right graph, a logarithmic scale to represent the two exponential distributions. With this representation we saw that the errors were clustered, mostly, on larger values of \emph{u}. This result was expected since, higher values of \emph{u} had a lower sample rate.
 
 \subsubsection*{From Exponential to Uniform}
 
@@ -91,7 +91,7 @@ Starting from the exponential \(E\sim\text{Exp}(\lambda)\). We derived the distr
 \begin{equation*}
   \forall i\in[0,N]\quad from\_exp_{i} =\sum_{j=0}^{i}{e_{j}}
 \end{equation*}
-Note that, we had to filter out all values greater than \emph{T}, this reduced the data usable for the new exponential distribution by a \(0\%\sim0.2\%\). %Following the domain of the exponential distribution could be the case that, every value is bigger than \emph{T}, this is an extremely unlucky but nevertheless still possible.
+Note that, we had to filter out all values greater than \emph{T}, this reduced the data usable for the new exponential distribution by a \(0\%-0.2\%\). %Following the domain of the exponential distribution could be the case that, every value is bigger than \emph{T}, this is an extremely unlucky but nevertheless still possible.
 
 \begin{figure}[h]
   \centering
@@ -108,7 +108,7 @@ By plotting~\ref{fig:2}, we compared the obtain distribution against the origina
 
 Variating the value \(N\) as \(N=2T\lambda\). We noticed a few changes in the simulations:
 \begin{itemize}
-\item The ratio of dropped samples from the exponential to the uniform increase to reach the value of \(50\%\), this phenomenon is visible on the leftmost graph in~\ref{fig:3};
+\item The uniform distribution has twice many valid samples as the uniform generated from the exponential, this phenomenon is visible on the leftmost graph in~\ref{fig:3};
 \item The exponential distribution extracted from the uniform plunges twice as fast as the original exponential, as visible in the last two graphs in~\ref{fig:3}.
 \end{itemize}
 
@@ -117,6 +117,8 @@ Variating the value \(N\) as \(N=2T\lambda\). We noticed a few changes in the si
   \caption{Distributions with \(N=2T\lambda\)}
   \label{fig:3}
 \end{figure}
+
+In general this can be generalised to any factor \(k\in\mathbb{N}^{+}\)
 
 \section*{Exercise 2}
 
@@ -183,7 +185,7 @@ The function takes in input the sample \texttt{array}, the value \texttt{r0}, th
 
 \subsubsection*{Sub-point 4}
 
-Since every disjointed set is formed by \(200\) values we decided to use the asymptotic estimation as done before for the mean. Depending on the run the percentage of sets with an arithmetic mean within the confidentiality interval was \(90\%\sim100\%\) which is around the real probability of confidence interval, i.e., \(95\%\).
+Since every disjointed set is formed by \(200\) values we decided to use the asymptotic estimation as done before for the mean. Depending on the run, the percentage of sets with an arithmetic mean within the confidentiality interval was \(95\%\pm5\%\) (most of the cases). Which is expected as it is around the confidence level of the confidence interval.
 \begin{lstlisting}[language=python]
 def es4(samples):
     n = len(samples)
