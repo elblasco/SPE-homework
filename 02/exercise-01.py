@@ -30,14 +30,16 @@ def main():
         old = l
 
     # Creating the plot
-    fig, ax = plt.subplots(3, 1)
+    fig, ax = plt.subplots(1, 3)
     uniform_range = (min(min(uni_vals), min(uni_vals2)), max(max(uni_vals), max(uni_vals2)))
     exponential_range = (min(min(exp_vals), min(exp_vals2)), max(max(exp_vals), max(exp_vals2)))
+    weights_from_uni = np.ones_like(exp_vals2) / len(exp_vals2)
+    weights_exp = np.ones_like(exp_vals) / len(exp_vals)
 
-    ax[0].hist(uni_vals, label='uniform', range=uniform_range, bins=40, edgecolor='red', alpha=1, hatch='//', histtype="step")
-    ax[0].hist(uni_vals2, label='from_exp', range=uniform_range, bins=40, edgecolor='green', alpha=1, hatch='\\\\', histtype="step")
-    ax[1].hist(exp_vals2, label='from_uni', bins=40, edgecolor='red', alpha=1, hatch='//', range=exponential_range, histtype="step")
-    ax[1].hist(exp_vals, label='exp', bins=40, edgecolor='green', alpha=1, hatch='\\\\', range=exponential_range, histtype="step")
+    ax[0].hist(uni_vals, label='uniform', range=uniform_range, bins=40, edgecolor='red', alpha=1, hatch='//', histtype="step", density=True)
+    ax[0].hist(uni_vals2, label='from_exp', range=uniform_range, bins=40, edgecolor='green', alpha=1, hatch='\\\\', histtype="step", density=True)
+    ax[1].hist(exp_vals2, label='from_uni', bins=40, edgecolor='red', alpha=1, hatch='//', range=exponential_range, histtype="step", weights=weights_from_uni)
+    ax[1].hist(exp_vals, label='exp', bins=40, edgecolor='green', alpha=1, hatch='\\\\', range=exponential_range, histtype="step", weights=weights_exp)
     ax[2].hist(exp_vals2, label='from_uni', log=True, bins=40, edgecolor='red', alpha=1, hatch='//', range=exponential_range, histtype="step")
     ax[2].hist(exp_vals, label='exp', log=True, bins=40, edgecolor='green', alpha=1, hatch='\\\\', range=exponential_range, histtype="step")
     ax[0].legend()
