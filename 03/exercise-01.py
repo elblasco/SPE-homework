@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def point1(measurements: list, times: list, ax):
-    ax.scatter(times, measurements)
+    ax[0].scatter(times, measurements, label='Scatterplot', color='grey')
 
 def least_square(times: list, measurements: list, m: int):
     y: list = measurements
@@ -64,7 +64,9 @@ def exp_max(X: list, mus: list, var: list):
             
             prob_color[c] = denominator / len(X)
 
-    print(mus, var)
+    return(mus, var, prob_color)
+
+
 def main():
     csvFile = csv.reader(open('data_ex1_wt.csv', mode ='r'))
     measurements: list = []
@@ -72,28 +74,41 @@ def main():
     for line in csvFile:
         times.append(float(line[0]))
         measurements.append(float(line[1]))
+    fig, ax = plt.subplots(1, 2)
+    plt.xticks(size = 22)
+    plt.yticks(size = 22)
+    point1(measurements, times, ax)
 
-    # fig, ax = plt.subplots()
+    for rank in range(1, 7):
+         trend: list = least_square(times, measurements, rank)
+         w = np.linspace(0,2,100)
+         z = [np.polyval(trend, i) for i in w]
+         ax[0].plot(w, z, label = f"lstsqr - {rank}")
     
-    # point1(measurements, times, ax)
-    # for i in range(10):
-    #     trend: list = least_square(times, measurements, i)
-    #     w = np.linspace(0,2,100)
-    #     z = [np.polyval(trend, i) for i in w]
-    #     ax.plot(w, z)
-
-    # plt.show()
+    ax[0].legend()
+    ax[0].legend(loc=3, prop={'size': 14})
     trend: list = least_square(times, measurements, 5)
     for i in range(len(measurements)):
-        measurements[i] = measurements[i] - np.polyval(trend, times[i])
+         measurements[i] = measurements[i] - np.polyval(trend, times[i])
+    ax[1].scatter(times, measurements, label='De-trended scatterplot')
+    ax[1].legend(loc=3, prop={'size': 14})
+    # #mus, variances, p_colours = exp_max(measurements, [-1,0,1], [1, 1, 1])
+    # mus = [-4.72, 0.41, 4.26]
+    # variances = [3.07, 5.96, 0.98]
+    # p_colours = [0.345, 0.302, 0.353]
+    
+    # ax[1].hist(measurements, bins=200, density=True)
+    # w = np.linspace(min(measurements), max(measurements), 1000)
+    # z = [
+    #     sum(
+    #         norm_pdf(x, mus[i], variances[i]) * p_colours[i]
+    #         for i in range(len(mus))
+    #     )
+    #     for x in w
+    # ]
+    # ax[1].plot(w, z)
+    plt.show()
 
-    #fig, ax = plt.subplots()
-    #ax.scatter(times, measurements)
-    #ax.ecdf(measurements)
-    #ax.hist(measurements, bins=200, density=True)
-    #plt.show()
-
-    exp_max(measurements, [-1,0,1], [1, 1, 1])
     
     
     
