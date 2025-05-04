@@ -32,29 +32,36 @@ def exp_max(X: list, mus: list, var: list):
         return
     n: int = len(mus)
     prob_color = [1/n for c in range(n)]
-    for _ in range(1000):
+    for _ in range(300):
         prob_colour_xi: list = [[] for c in range(n)]
         for i in range(len(X)):
             prob_xi_colour: list = []
             for c in range(n):
                 prob_xi_colour.append(norm_pdf(X[i], mus[c], var[c]))
-            denominator: float = 0
-            for c in range(n):
-                denominator += (prob_xi_colour[c] * prob_color[c])
+
+            denominator: float = sum(
+                prob_xi_colour[c] * prob_color[c] for c in range(n)
+            )
+            
             for c in range(n):
                 prob_colour_xi[c].append(prob_xi_colour[c] * prob_color[c] / denominator)
 
         for c in range(n):
-            denominator = 0
-            for i in range(len(X)):
-                denominator += prob_colour_xi[c][i]
-            mus[c] = 0
-            for i in range(len(X)):
-                mus[c] += prob_colour_xi[c][i] * X[i] / denominator
+            denominator = sum(
+                prob_colour_xi[c][i]
+                for i in range(len(X))
+            )
+            
+            mus[c] = sum(
+                prob_colour_xi[c][i] * X[i]
+                for i in range(len(X))
+            ) / denominator
 
-            var[c] = 0
-            for i in range(len(X)):
-                var[c] += prob_colour_xi[c][i] * (X[i] - mus[c])**2 / denominator
+            var[c] = sum(
+                prob_colour_xi[c][i] * (X[i] - mus[c])**2
+                for i in range(len(X))
+            ) / denominator
+            
             prob_color[c] = denominator / len(X)
 
     print(mus, var)
