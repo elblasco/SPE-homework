@@ -127,9 +127,15 @@ def point5(measurements: list, times: list, ax):
     for measurement in measurements:
         i = min(INTERVAL - 1, max( math.floor((measurement - MIN_V) / (MAX_V - MIN_V) * INTERVAL), 0))
         n_i[i] += 1 
-    for i in range(2, 5):
-        
-        mus, variances, p_colours = exp_max_prec(measurements, [0] * i, [1] * i, 150)
+
+    cont = True
+    old_T = float('inf')
+    i = 2
+    while(cont):
+        start_mu = list(np.linspace(MIN_V, MAX_V, i + 1, endpoint=False))
+        start_mu.pop(0)
+        mus, variances, p_colours = exp_max_prec(measurements, start_mu, [1] * i, 500 * i)
+        # print("Done ", i)
         # print(mus, variances, p_colours)
         plot_exp_max(measurements, mus, variances, p_colours, ax)
         p_i = [
@@ -146,6 +152,10 @@ def point5(measurements: list, times: list, ax):
         )
         print("T =",T, "with i=", i)
         
+        cont = (old_T - T) / T > 0.10
+        old_T = T
+        i += 1
+
 def main():
     csvFile = csv.reader(open('data_ex1_wt.csv', mode ='r'))
     measurements: list = []
