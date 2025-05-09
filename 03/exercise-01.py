@@ -40,6 +40,9 @@ def exp_max_prec(X: list, mus: list, var: list, ITERATION: int):
             mus = [-4.78, 0.923, -0.812, 4.26]
             var = [2.96, 5.08, 7.94, 0.979]
             p_colours = [0.319, 0.167, 0.162, 0.352]
+        case _:
+            mus, var, p_colours = exp_max_prec(measurements, mus, var, ITERATION)
+
     return(mus, var, p_colours)
 
 def exp_max(X: list, mus: list, var: list, ITERATION: int):
@@ -56,7 +59,6 @@ def exp_max(X: list, mus: list, var: list, ITERATION: int):
             ]
 
             denominator: float = sum(prob_xi_colour)
-            
             for c in range(n):
                 prob_colour_xi[c].append(prob_xi_colour[c] / denominator)
 
@@ -112,7 +114,7 @@ def point2(measurements: list, times: list, old_ax, new_ax):
 
 def point4(measurements: list, times: list, ax):
     ax.hist(measurements, bins=200, density=True, label='De-trended histogram')
-    mus, variances, p_colours = exp_max_prec(measurements, [-1,0,1], [1, 1, 1], 300)
+    mus, variances, p_colours = exp_max_prec(measurements, [-5,0,5], [1, 1, 1], 900)
     plot_exp_max(measurements, mus, variances, p_colours, ax)
 
 def point5(measurements: list, times: list, ax):
@@ -159,23 +161,23 @@ def main():
     # POINT 2
     fig2, ax2 = plt.subplots(1, 1)
     point2(measurements, times, ax1, ax2)
-    fig1.savefig('./report/img/point1.png', bbox_inches='tight')
-    fig2.savefig('./report/img/point2.png', bbox_inches='tight')
+    fig1.savefig('point1.png', bbox_inches='tight')
+    fig2.savefig('point2.png', bbox_inches='tight')
     
     # POINT 3
     fig3, ax3 = plt.subplots(1, 1)
     ax3.hist(measurements, bins=200, density=True, label='De-trended histogram')
-    fig3.savefig('./report/img/point3.png', bbox_inches='tight')
+    fig3.savefig('point3.png', bbox_inches='tight')
     
     # POINT 4
     fig4, ax4 = plt.subplots(1, 1)
     point4(measurements, times, ax4)
-    fig4.savefig('./report/img/point4.png', bbox_inches='tight')
+    fig4.savefig('point4.png', bbox_inches='tight')
 
     # POINT 5
     fig5, ax5 = plt.subplots(1, 1)
     point5(measurements, times, ax5)
-    fig5.savefig('./report/img/point5.png', bbox_inches='tight')
+    fig5.savefig('point5.png', bbox_inches='tight')
 
     print("plots have been saved as images")
     
