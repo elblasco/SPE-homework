@@ -109,16 +109,16 @@ def point2(measurements: list, times: list, old_ax, new_ax):
     for i in range(len(measurements)):
          measurements[i] = measurements[i] - np.polyval(trend, times[i])
 
-    new_ax.scatter(times, measurements, label='De-trended scatterplot')
+    new_ax.scatter(times, measurements, label='De-trended measurements')
     new_ax.legend(loc=3, prop={'size': 10})
 
 def point4(measurements: list, times: list, ax):
-    ax.hist(measurements, bins=200, density=True, label='De-trended histogram')
+    ax.hist(measurements, bins=200, density=True, label='De-trended measurements')
     mus, variances, p_colours = exp_max_prec(measurements, [-5,0,5], [1, 1, 1], 900)
     plot_exp_max(measurements, mus, variances, p_colours, ax)
 
 def point5(measurements: list, times: list, ax):
-    ax.hist(measurements, bins=200, density=True, label='De-trended histogram')
+    ax.hist(measurements, bins=200, density=True, label='De-trended measurements')
     MIN_V = -10
     MAX_V = 10
     INTERVAL = 50
@@ -166,7 +166,7 @@ def main():
          
     # POINT 1
     fig1, ax1 = plt.subplots(1, 1)
-    ax1.scatter(times, measurements, label='Scatterplot', color='grey')
+    ax1.scatter(times, measurements, label='Raw measurementse', color='grey')
     
     # POINT 2
     fig2, ax2 = plt.subplots(1, 1)
@@ -176,7 +176,8 @@ def main():
     
     # POINT 3
     fig3, ax3 = plt.subplots(1, 1)
-    ax3.hist(measurements, bins=200, density=True, label='De-trended histogram')
+    ax3.hist(measurements, bins=200, density=True, label='De-trended measurements')
+    ax3.legend(loc=2, prop={'size': 10})
     fig3.savefig('point3.png', bbox_inches='tight')
     
     # POINT 4
