@@ -69,7 +69,7 @@
   \captionof{figure}{Measurements and ``Least square'' trends for various ranks}
 \end{center}
 
-After drawing the the dataset scatter plot, it is clear the trend in it. The trend is a sinusoid-like curve with a local maximum after 0.3 seconds and a local minimum after 1.60 seconds. 
+After drawing the the dataset scatter plot, it is clear that there is a trend in it. The trend is a sinusoidal-like curve with a local maximum after 0.3 seconds and a local minimum after 1.60 seconds. 
 
 We used least square method to identify the trend. To be specific we used the polynomial fit with exponents between 1 and 6. We used:
 \begin{itemize}
@@ -78,7 +78,7 @@ We used least square method to identify the trend. To be specific we used the po
 \end{itemize}
 The trend was represented by the array \(\hat{b} = (A^\prime A)^{-1} A^\prime y\). In our code the upper bound exponent for \emph{A} has been called \emph{rank}. For the sake of simplicity we handled all the matrix operations using the library \texttt{numpy}.
 
-We iteratively increase the rank of the least squared function until, graphically, the curve was well fitted. Ranks before 4 gave us a poor fitting but from 4 we started seeing a well fitted curve so we decided to go once step further and use rank 5, even thou 4 is probably enough.
+We iteratively increase the rank of the least squared function until, graphically, the curve was well fitted. Ranks before 4 gave us a poor fitting but from 4 we started seeing a well fitted curve so we decided to go once step further and use rank 5, even though 4 is probably enough.
 
 %Ranks after 4 were practically indistinguishable from one another.
 
@@ -95,7 +95,7 @@ for i in range(len(measurements)):
     # np.polyval evaluates a polynomial at specific values.
 \end{lstlisting}
 
-By drawing scatter plot of new data we showed that the trend was removed. With the de-trended data the normalised histogram shows a distribution that can be fitted better.
+By drawing scatter plot of new data we showed that the trend was removed.% With the de-trended data the normalised histogram shows a distribution that can be fitted better.
 
 \begin{minipage}[c]{0.5\textwidth}
     \centering
@@ -118,9 +118,9 @@ We started with three normal distributions:
 \end{itemize}
 %This were our starting assumptions about the distributions parameters. Note that, we could have picked better starting parameters, by using the histogram to get a better approximation of the means and variances. We avoided doing so because having looked to the real values we did not want to be influenced by them.
 
-These were our initial assumptions about the Gaussians parameters. We could have done better by picking values closer to the values written on the homework text.
+These were our initial assumptions about the Gaussians parameters. We could have done better by picking values closer to the values written on the homework text or by looking at the histogram.
 
-We implemented the ``Expectation-Maximization'' following the procedures explained during the course. The algorithm proceeds iteratively through a series of iterations. During each iteration the algorithm computes the probability of a measurement to come from a specific Gaussian and then improves its assumptions about the parameters described above, even probability of extraction. The resulting distribution fits quite well the dataset as shown in figure:
+We implemented the ``Expectation-Maximization'' following the procedures explained during the course. The algorithm proceeds iteratively through a series of iterations. During each iteration the algorithm computes the probability of a measurement to come from a specific Gaussian and then improves its assumptions about the parameters described above. In our implementation the probability of a point to be part of a Gaussian is updated as well. The resulting distribution fits quite well the dataset as shown in figure:
 
 \begin{center}
   \includegraphics[width=0.5\textwidth]{point4.png}
@@ -129,11 +129,12 @@ We implemented the ``Expectation-Maximization'' following the procedures explain
 
 \subsection*{Sub-exercise 5}
 
-It is possible to automatically pick the best number of Gaussians to approximate the original distribution. The algorithm divides the dataset into a number of \emph{k} intervals, and estimates the parameters for, an increasing, number \emph{n} of Gaussians using the ``Expectation-Maximization'' algorithm. For each iteration over \emph{n} we produced the T-value for the ``Chi-squared'' test, this value stabilises as the mixture of Gaussians fits the dataset.% the T-value for the chi square test. This T-value grows smaller as the dataset fists better the sum of k-Gaussians.
+It is possible to automatically pick the best number of Gaussians to approximate the original distribution. The algorithm estimates the parameters for, an increasing, number \emph{n} of Gaussians using the ``Expectation-Maximization'' algorithm. For each iteration over \emph{n} we produced the T-value for the ``Chi-squared'' test, this value either stabilises as the mixture of Gaussians fits the dataset or increases again.% the T-value for the chi square test. This T-value grows smaller as the dataset fists better the sum of k-Gaussians.
 
-We then defined the value \(\Delta\) which is the minimum improvement needed to continue the search for a better Gaussian. For each sum of Gaussians, after the first, we computed the improvement as: \[\frac{T - T^\prime}{T^\prime}\] where \(T^{\prime}\) is the T-value for the sum of \emph{n} Gaussians, while \(T\) is the T-value for the sum of \(k-1\) Gaussians. The algorithm continues its iteration over \emph{n} if \[\frac{T - T^\prime}{T^\prime} < \Delta\] Once this condition is violated we check if \[P\{\chi^{2}_{k-1} \geq T^\prime\} < 0.05\] and if it is not the case, then the T-value stabilised around the value \emph{T} using \(k-1\) Gaussians.
+We then defined the value \(\Delta\) which is the minimum improvement needed to continue the search for a better Gaussian. For each sum of Gaussians, after the first, we computed the improvement as: \[\frac{T - T^\prime}{T^\prime}\] where \(T^{\prime}\) is the T-value for the sum of \emph{n} Gaussians, while \(T\) is the T-value for the sum of \(k-1\) Gaussians. The algorithm continues its iteration over \emph{n} if \[\frac{T - T^\prime}{T^\prime} < \Delta\]% Once this condition is violated we check if \[P\{\chi^{2}_{k-1} \geq T^\prime\} < 0.05\] and if it is not the case, then the T-value stabilised around the value \emph{T} using \(k-1\) Gaussians.
+Once this condition was violated we checked on ``Chi-squared'' tables for the value of \(P\{\chi^{2}_{k-1} \geq T^\prime\}\), if that value was \(\geq 0.05\) the we could not reject (neither accept) the hypothesis about the number \emph{n}. This part of the procedure can be automated as well using the function \texttt{chisquare} from the \texttt{numpy} library.
 
-With \(\Delta = 0.01 = 1\%\), we got that the best \emph{k} is 3, this can be easily seen in the following picture:
+With \(\Delta = 0.01 = 1\%\), we got that a possible \emph{n} is 3, this can be easily seen in the following picture:
 
 \begin{center}
   \includegraphics[width=0.5\textwidth]{point5.png}
@@ -141,5 +142,5 @@ With \(\Delta = 0.01 = 1\%\), we got that the best \emph{k} is 3, this can be ea
 \end{center}
 
 % Because we computed the T-values we can then did the ``Chi-square'' test, for continuos functions, to verify if an hypothesis can be rejected. Doing so we can show that \(k = 2\) must be rejected while we cannot reject (neither accept) \(k = 3, 4\).
-Using this procedure we shown that the hypothesis with \(k = 2\) must be rejected, while we could not reject (neither accept) the hypotheses \(k = 3, 4\).
+Using this procedure we shown that the hypothesis with \(n = 2\) must be rejected, while we could not reject (neither accept) the hypotheses \(n = 3, 4\).
 \end{document}
