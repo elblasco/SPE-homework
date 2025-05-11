@@ -41,7 +41,7 @@ def exp_max_prec(X: list, mus: list, var: list, ITERATION: int):
             var = [2.96, 5.08, 7.94, 0.979]
             p_colours = [0.319, 0.167, 0.162, 0.352]
         case _:
-            mus, var, p_colours = exp_max_prec(measurements, mus, var, ITERATION)
+            mus, var, p_colours = exp_max(X, mus, var, ITERATION)
 
     return(mus, var, p_colours)
 
