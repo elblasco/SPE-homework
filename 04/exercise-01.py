@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-
 from enum import Enum
-import heapq
+from heapq import heapify, heappop, heappush
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 
 class EventType(Enum):
@@ -24,60 +24,90 @@ def generate_events(start_time, end_time, lamb) -> list:
     return events
 
 
-def simulation(start_time, end_time, lamb, mi) -> (list, list):
-    server_busy: bool = False
-    packets: int = 0
-    events_heap: list = generate_events(start_time, end_time, lamb)
-    heapq.heapify(events_heap)
+class QueueServerState:
+    def __init__(self, start_time, end_time, lamb, mi):
+        self.queue = []
+        self.next_id = 0
+        self.busy = False
+        self.lamb = lamb
+        self.mi = mi
+
+        self.events_heap = generate_events(start_time, end_time, lamb)
+        heapify(self.events_heap)
+
+    def packet_arrival(self, curr_time):
+        if self.busy:
+            self.queue.append((self.next_id, curr_time))
+        else:
+            self.busy = True
+            self.__push_event_departure(curr_time)
+
+    # return tiem the packet was inserted in queue/processor
+    def packet_departure(self, curr_time):
+        if len(self.queue) > 0:
+            self.queue.pop()
+            # Schudeled departure for the nextr waiting packet
+            self.__push_event_departure(curr_time)
+        else:
+            self.busy = False
+
+    def __push_event_departure(self, curr_time):
+        schduled_departure = np.random.exponential(1 / self.mi) + curr_time
+        heappush(self.events_heap, (schduled_departure, EventType.DEPARTURE))
+
+    def pop_next_event(self) -> (float, EventType):
+        return heappop(self.events_heap)
+
+    def empty_events(self) -> bool:
+        return len(self.events_heap) <= 0
+
+    # Queue len + process work
+    def curr_load(self) -> int:
+        return len(self.queue) + (1 if self.busy else 0)
+
+
+def run_single_simulation(start_time, end_time, lamb, mi) -> (list, list):
+    server = QueueServerState(start_time, end_time, lamb, mi)
+
     packets_per_istant: list = []
     istants: list = []
-    while len(events_heap) > 0:
-        current_time, current_event = heapq.heappop(events_heap)
-        # print(current_event)
-        match current_event:
-            case EventType.START:
-                print("Started")
-            case EventType.ARRIVAL:
-                # packets += 1
-                if not server_busy:
-                    server_busy = True
-                    schduled_departure = np.random.exponential(1 / mi) + current_time
-                    heapq.heappush(
-                        events_heap, (schduled_departure, EventType.DEPARTURE)
-                    )
-                else:
-                    packets += 1
 
+    while not server.empty_events():
+        curr_time, curr_event = server.pop_next_event()
+
+        match curr_event:
+            case EventType.START:
+                pass  # NOP
+            case EventType.ARRIVAL:
+                server.packet_arrival(curr_time)
             case EventType.DEPARTURE:
-                if packets > 0:
-                    packets -= 1
-                    #                    packets_per_istant[event_idx] = packets
-                    # Schudeled departure for the nextr waiting packet
-                    schduled_departure = np.random.exponential(1 / mi) + current_time
-                    heapq.heappush(
-                        events_heap, (schduled_departure, EventType.DEPARTURE)
-                    )
-                else:
-                    server_busy = False
+                server.packet_departure(curr_time)
             case EventType.END:
                 break
-        packets_per_istant.append(packets + (1 if server_busy else 0))
-        istants.append(current_time)
+
+        packets_per_istant.append(server.curr_load())
+        istants.append(curr_time)
+
     return packets_per_istant, istants
 
 
 def main():
     totali_pacchetti: list = []
 
-    for _ in range(100):
-        pacchetti, istanti = simulation(0, 1e4, 10, 2)
+    for i in range(1):
+        print(f"Start simulation {i}")
+        pacchetti, istanti = run_single_simulation(0, 1e4, 2, 4)
         totali_pacchetti += pacchetti
+
+    print("Preparing graphs (may take some time)")
     # fig, ax = plt.subplots(1, 2)
     # ax[0].plot(istanti, pacchetti)
-    d = np.diff(np.unique(totali_pacchetti)).min()
-    left_of_first_bin = min(totali_pacchetti) - float(d) / 2
-    right_of_last_bin = max(totali_pacchetti) + float(d) / 2
-    plt.hist(totali_pacchetti, np.arange(left_of_first_bin, right_of_last_bin + d, d))
+
+    bin_min = 0
+    bin_max = max(totali_pacchetti)
+    step_size = math.ceil((bin_max - bin_min) / 100)
+
+    plt.hist(totali_pacchetti, np.arange(bin_min - 1 / 2, bin_max + 3 / 2, step_size))
     plt.show()
 
 
