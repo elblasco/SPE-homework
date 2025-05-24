@@ -93,21 +93,25 @@ def run_single_simulation(start_time, end_time, lamb, mi) -> (list, list):
 
 def main():
     totali_pacchetti: list = []
+    lam = 4  # departures
+    mi = 2  # arrivals
 
-    for i in range(1):
+    for i in range(30):
         print(f"Start simulation {i}")
-        pacchetti, istanti = run_single_simulation(0, 1e4, 2, 4)
+        pacchetti, istanti = run_single_simulation(0, 1e4, lam, mi)
         totali_pacchetti += pacchetti
 
     print("Preparing graphs (may take some time)")
-    # fig, ax = plt.subplots(1, 2)
-    # ax[0].plot(istanti, pacchetti)
+    _, ax = plt.subplots(2, 1)
+
+    elements, counts = np.unique(totali_pacchetti, return_counts=True)
+    ax[0].plot(elements, counts, marker="o")
 
     bin_min = 0
     bin_max = max(totali_pacchetti)
     step_size = math.ceil((bin_max - bin_min) / 100)
 
-    plt.hist(totali_pacchetti, np.arange(bin_min - 1 / 2, bin_max + 3 / 2, step_size))
+    ax[1].hist(totali_pacchetti, np.arange(bin_min - 1 / 2, bin_max + 3 / 2, step_size))
     plt.show()
 
 
