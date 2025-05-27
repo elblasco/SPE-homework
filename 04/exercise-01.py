@@ -208,7 +208,7 @@ def post_stratify_departure(dep_elapsed: list, dep_queue_waiting: list, ro: floa
         return_mean.append(np.average(stratified[i]))
         return_var.append(np.var(stratified[i]))
         return_pi.append(len(stratified[i]) / len(dep_elapsed))
-        print(i, return_pi[i], len(stratified[i]), dep_queue_waiting.count(i), len(dep_elapsed))
+        #print(i, return_pi[i], len(stratified[i]), dep_queue_waiting.count(i), len(dep_elapsed))
 
     return (return_mean, return_var, return_pi) 
 
@@ -218,40 +218,41 @@ def ex2(ro, sim_len, n_simulation):
     lam = 1  # departures
     mi = lam / ro  # arrivals
 
-    full_dep_elapsed = []
-    full_dep_queue_waiting = []
+    full_departure_elapsed = []
+    full_departure_queue_waiting = []
 
     for i in range(n_simulation):
         print(f"Start simulation {i}")
         _, _, dep_elapsed, dep_queue_waited = run_single_simulation(start, end, lam, mi)
 
-        full_dep_elapsed.extend(dep_elapsed)
-        full_dep_queue_waiting.extend(dep_queue_waited)
+        full_departure_elapsed += dep_elapsed
+        full_departure_queue_waiting += dep_queue_waited
 
-    naive_avg = np.average(full_dep_elapsed)
-
-    naive_vari = np.var(full_dep_elapsed)
+    naive_avg = np.average(full_departure_elapsed)
+    naive_var = np.var(full_departure_elapsed)
     eta = 1.96  # for confidence level 0.95
-    naive_diff = eta * math.sqrt(naive_vari / len(full_dep_elapsed))
-    print(f"Naïve Avg {naive_avg} +- {naive_diff}, expected {1 / (mi - lam)}")
+    naive_interval = eta * math.sqrt(naive_var / len(full_departure_elapsed))
+    print(f"Naïve Avg {naive_avg} +- {naive_interval}, expected {1 / (mi - lam)}")
 
-    post_strat_mean, post_strat_var, post_stratified_pi = post_stratify_departure(
-        full_dep_elapsed, full_dep_queue_waiting, ro
+    post_stratified_mean, post_stratified_var, post_stratified_pi = post_stratify_departure(
+        full_departure_elapsed, full_departure_queue_waiting, ro
     )
 
-    post_stratified_avg: float = np.average(post_strat_mean, weights=post_stratified_pi)
-    post_stratified_var: float = np.average(post_strat_var, weights=list(map(lambda x: x*x, post_stratified_pi)))
+    post_stratified_avg: float = np.average(post_stratified_mean, weights=post_stratified_pi)
+    post_stratified_var: float = np.average(post_stratified_var, weights=list(map(lambda x: x*x, post_stratified_pi)))
 
-    post_stratified_diff = eta * math.sqrt(post_stratified_var / len(full_dep_elapsed))
-    print(f"Post stratified Avg {post_stratified_avg} +- {post_stratified_diff}, expected {1 / (mi - lam)}")
+    post_stratified_interval = eta * math.sqrt(post_stratified_var / len(full_departure_elapsed))
+    print(f"Post stratified Avg {post_stratified_avg} +- {post_stratified_interval}, expected {1 / (mi - lam)}")
     
-    _, ax = plt.subplots(2, 2)
+    _, ax = plt.subplots(1, 3)
 
-    ax[0][0].hist(full_dep_elapsed)
-    ax[0][1].hist(full_dep_queue_waiting)
-    ax[1][0].hist(full_dep_queue_waiting)
-    ax[1][1].plot(post_stratified_pi)    
-    ax[1][1].plot([ro*((1 - ro)**i) for i in range(len(post_stratified_pi))])
+    ax[0].hist(full_departure_elapsed, label=f"Departure time over {n_simulation} simuls", density=True)
+    ax[1].hist(full_departure_queue_waiting, label=f"Waiting time in {n_simulation} simuls", density=True)
+    ax[2].plot(post_stratified_pi, label="Probabilities obtained with post-strat")    
+    ax[2].plot([ro*((1 - ro)**i) for i in range(len(post_stratified_pi))], label="Theoretical probabilities")
+    ax[0].legend()
+    ax[1].legend()
+    ax[2].legend()
     plt.show()
 
 
