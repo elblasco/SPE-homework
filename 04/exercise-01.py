@@ -211,19 +211,34 @@ def ex2(ro, sim_len, n_simulation):
     naive_vari = np.var(full_dep_elapsed)
     eta = 1.96  # for confidence level 0.95
     naive_diff = eta * math.sqrt(naive_vari / len(full_dep_elapsed))
-    print(f"Avg {naive_avg} +- {naive_diff}, expected {1 / (mi - lam)}")
+    print(f"Naïve Avg {naive_avg} +- {naive_diff}, expected {1 / (mi - lam)}")
 
-    _, ax = plt.subplots(1, 2)
+    post_strat_mean, post_strat_var, post_stratified_pi = post_stratify_departure(
+        full_dep_elapsed, full_dep_queue_waiting, ro
+    )
 
-    ax[0].hist(full_dep_elapsed)
+    post_stratified_avg: float = np.average(post_strat_mean, weights=post_stratified_pi)
+    post_stratified_var: float = np.average(post_strat_var, weights=list(map(lambda x: x*x, post_stratified_pi)))
+
+    post_stratified_diff = eta * math.sqrt(post_stratified_var / len(full_dep_elapsed))
+    print(f"Post stratified Avg {post_stratified_avg} +- {post_stratified_diff}, expected {1 / (mi - lam)}")
+    
+    _, ax = plt.subplots(2, 2)
+
+    ax[0][0].hist(full_dep_elapsed)
+    ax[0][1].hist(full_dep_queue_waiting)
+    ax[1][0].hist(full_dep_queue_waiting)
+    ax[1][1].plot(post_stratified_pi)    
+    ax[1][1].plot([ro*((1 - ro)**i) for i in range(len(post_stratified_pi))])
     plt.show()
 
 
 def main():
     sim_time_len = 100000
     ro = 1 / (2)  # lab/ mi
-    n_simulation = 10
-    ex2(ro, sim_time_len, n_simulation)
+    n_simulation = 5
+    
+    ex1(ro, sim_time_len, n_simulation)
 
 
 if __name__ == "__main__":
