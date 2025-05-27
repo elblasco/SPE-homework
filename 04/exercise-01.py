@@ -100,54 +100,51 @@ def ex1(ro, sim_len, n_simulation):
     lam = 1  # departures
     mi = lam / ro  # arrivals
 
-    totali_pacchetti = []
-    avg_packet = []
-    instant_avg = []
+    totali_pacchetti: list = []
+    avg_packet: list = []
+    instant_avg: list = []
+    n_packets:list = []
+    instants:list = []
+    
+    for sim in range(n_simulation):
+        print(f"Start simulation {sim}")
+        n_packets, instants, _, _ = run_single_simulation(start, end, lam, mi)
 
-    for i in range(n_simulation):
-        print(f"Start simulation {i}")
-        pacchetti, istanti, _, _ = run_single_simulation(start, end, lam, mi)
-        # for j in range(len(pacchetti)):
-        #     if j >= len(avg_packet):
-        #         avg_packet.append(pacchetti[j] / n_simulation)
-        #     else:
-        #         avg_packet[j] += pacchetti[j] / n_simulation
-
-        assert len(avg_packet) == len(instant_avg)
+        #assert len(avg_packet) == len(instant_avg)
         tmp_pack = []
         tmp_inst = []
-        i = 0
-        j = 0
-        old_avg = 0
-        old_pack = 0
-        while i < len(pacchetti) and j < len(avg_packet):
-            if istanti[i] < instant_avg[j]:
-                tmp_inst.append(istanti[i])
-                tmp_pack.append(pacchetti[i] + old_avg)
-                old_pack = pacchetti[i]
+        i = j = old_avg = old_pack = 0
+        while i < len(n_packets) and j < len(avg_packet):
+            t_i = instants[i]
+            t_j = instant_avg[j]
+
+            if t_i < t_j:
+                tmp_inst.append(instants[i])
+                tmp_pack.append(n_packets[i] + old_avg)
+                old_pack = n_packets[i]
                 i += 1
-            elif istanti[i] > instant_avg[j]:
+            elif t_i > t_j:
                 tmp_inst.append(instant_avg[j])
                 tmp_pack.append(avg_packet[j] + old_pack)
                 old_avg = avg_packet[j]
                 j += 1
             else:  # same instant
-                tmp_inst.append(istanti[i])
-                tmp_pack.append(pacchetti[i] + avg_packet[j])
-                old_pack = pacchetti[i]
+                tmp_inst.append(instants[i])
+                tmp_pack.append(n_packets[i] + avg_packet[j])
+                old_pack = n_packets[i]
                 old_avg = avg_packet[j]
                 i += 1
                 j += 1
 
-        tmp_inst.extend(istanti[i:])
-        tmp_pack.extend(pacchetti[i:])
+        tmp_inst.extend(instants[i:])
+        tmp_pack.extend(n_packets[i:])
         tmp_inst.extend(instant_avg[j:])
         tmp_pack.extend(avg_packet[j:])
 
         avg_packet = tmp_pack
         instant_avg = tmp_inst
 
-        totali_pacchetti += pacchetti
+        totali_pacchetti += n_packets
 
     avg_packet = [a / n_simulation for a in avg_packet]
 
@@ -157,38 +154,63 @@ def ex1(ro, sim_len, n_simulation):
     bin_min = 0
     bin_max = max(totali_pacchetti)
 
-    elements, counts = np.unique(totali_pacchetti, return_counts=True)
-    ax[0][0].plot(elements, counts)  # , marker="o")
+    n_packet_in_queue, n_packet_in_queue_occur = np.unique(totali_pacchetti, return_counts=True)
+    empirical_derivative_n_packets = [np.log(c) for c in n_packet_in_queue_occur]
+    empirical_derivative_slope = (
+        empirical_derivative_n_packets[int(len(empirical_derivative_n_packets) / 2)] - empirical_derivative_n_packets[1]) / (n_packet_in_queue[int(len(n_packet_in_queue) / 2)] - n_packet_in_queue[1])
+    linspace_n_packet_in_queue = np.linspace(1, bin_max, 100)
+    theoretical_n_packet_values = [n_packet_in_queue_occur[1] * math.e ** (empirical_derivative_slope * (x - 1)) for x in linspace_n_packet_in_queue]
+    
+    ax[0][0].plot(n_packet_in_queue, n_packet_in_queue_occur, label="Sorted unique numbers of packets")
+    ax[0][0].plot(linspace_n_packet_in_queue, theoretical_n_packet_values, label="Theoretical values")
+    ax[0][0].legend()
+    
+    ax[0][1].plot(n_packet_in_queue[1:], empirical_derivative_n_packets[1:], label="Empirical derivative of packets in queue")
+    ax[0][1].plot(
+        n_packet_in_queue[1:],
+        [empirical_derivative_n_packets[1] + empirical_derivative_slope * c for c in range(len(n_packet_in_queue) - 1)],
+        label="Theoretical derivative of packets in queue"
+        )
+    ax[0][1].legend()
+    
+    ax[0][2].plot(instants, n_packets, label="Packets [y] for each instant [x]")
+    ax[0][2].legend()
 
     step_size = math.ceil((bin_max - bin_min) / 100)
 
     ax[1][0].hist(
-        totali_pacchetti, np.arange(bin_min - 1 / 2, bin_max + 3 / 2, step_size)
+        totali_pacchetti, np.arange(bin_min - 1 / 2, bin_max + 3 / 2, step_size), label="Number of istants with [x] packets in the queue"
     )
+    ax[1][0].legend()
 
-    logg = [np.log(c) for c in counts]
-    ax[0][1].plot(elements[1:], logg[1:])
-    m = (logg[int(len(logg) / 2)] - logg[1]) / (
-        elements[int(len(elements) / 2)] - elements[1]
-    )
-    ax[0][1].plot(elements[1:], [logg[1] + m * c for c in range(len(elements) - 1)])
-
-    w = np.linspace(1, bin_max, 100)
-    z = [counts[1] * math.e ** (m * (x - 1)) for x in w]
-    ax[0][0].plot(w, z)
-
-    ax[1][1].plot(instant_avg, avg_packet)
-
-    real = np.average(avg_packet[int(len(avg_packet) / 4) :])
-    expe = ro / (1 - ro)
-    print(expe, real)
-    ax[1][1].plot(instant_avg, [expe for _ in avg_packet])
-    ax[1][1].plot(instant_avg, [real for _ in avg_packet])
-
-    ax[0][2].plot(istanti, pacchetti)
-
+    ax[1][1].plot(instant_avg, avg_packet, label="Average Packet per instant")
+    empirical_mean_n_packets = np.average(avg_packet[int(len(avg_packet) / 4) :])
+    theoretical_mean_n_packets = ro / (1 - ro)
+    print(theoretical_mean_n_packets, empirical_mean_n_packets)
+    ax[1][1].plot(instant_avg, [theoretical_mean_n_packets for _ in avg_packet], label="Theoretical mean of packets")
+    ax[1][1].plot(instant_avg, [empirical_mean_n_packets for _ in avg_packet], label="Empirical mean of packets")
+    ax[1][1].legend()
+    
     plt.show()
 
+    
+def post_stratify_departure(dep_elapsed: list, dep_queue_waiting: list, ro: float) -> (list, list, list):
+    lenght: int = max(dep_queue_waiting) + 1
+    stratified: list = [[] for _ in range(lenght)]
+    
+    for inqueue, elapsed in zip(dep_queue_waiting, dep_elapsed):
+        stratified[inqueue].append(elapsed)
+        
+    return_mean: list = []
+    return_var: list = []
+    return_pi: list = []
+    for i in range(lenght):
+        return_mean.append(np.average(stratified[i]))
+        return_var.append(np.var(stratified[i]))
+        return_pi.append(len(stratified[i]) / len(dep_elapsed))
+        print(i, return_pi[i], len(stratified[i]), dep_queue_waiting.count(i), len(dep_elapsed))
+
+    return (return_mean, return_var, return_pi) 
 
 def ex2(ro, sim_len, n_simulation):
     start = 0
