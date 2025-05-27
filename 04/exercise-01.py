@@ -136,13 +136,13 @@ def ex1(ro, sim_len, n_simulation):
                 i += 1
                 j += 1
 
-        tmp_inst.extend(instants[i:])
-        tmp_pack.extend(n_packets[i:])
-        tmp_inst.extend(instant_avg[j:])
-        tmp_pack.extend(avg_packet[j:])
+        # tmp_inst += instants[i:]
+        # tmp_pack += n_packets[i:]
+        # tmp_inst += instant_avg[j:]
+        # tmp_pack += avg_packet[j:]
 
-        avg_packet = tmp_pack
-        instant_avg = tmp_inst
+        avg_packet += n_packets[i:] + avg_packet[j:]
+        instant_avg += instants[i:] + instant_avg[j:]
 
         totali_pacchetti += n_packets
 
