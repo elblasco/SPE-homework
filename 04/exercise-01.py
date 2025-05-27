@@ -38,7 +38,7 @@ class QueueServerState:
     def packet_arrival(self, curr_time):
         if not self.is_busy():
             self.__push_event_departure(curr_time)
-        self.queue.append((self.next_id, curr_time, self.curr_load() - 1))
+        self.queue.append((self.next_id, curr_time, max(self.curr_load(), 0)))
 
     # return id of the packet and time it was inserted in queue/processor
     def packet_departure(self, curr_time) -> (int, float, int):
