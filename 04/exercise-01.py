@@ -130,11 +130,15 @@ def merge_with_avg(avg_p, avg_inst, curr_p, curr_inst) -> (list, list):
 
 def get_line(Xs, Ys):
     assert len(Xs) == len(Ys)
-    line = np.polyfit(Xs, Ys, 1)
+    lenght = len(Xs)
+    print(Xs[0], Ys[0])
+    weights = np.ones_like(Xs)
+    weights[0] = 1000
+    line = np.polyfit(Xs, Ys, 1, w=weights)
 
     # residual sum of squares
     ss_res = np.sum(
-        [(Ys[i] - (Xs[i] * line[0] + line[1])) ** 2 for i in range(len(Xs))]
+        [(Ys[i] - (Xs[i] * line[0] + line[1])) ** 2 for i in range(lenght)]
     )
 
     # total sum of squares
@@ -159,6 +163,7 @@ def ex1(ro, sim_len, n_simulation):
     n_packets: list = []
     instants: list = []
 
+    # Start simulation
     for sim in range(n_simulation):
         print(f"Start simulation {sim}")
         n_packets, instants, _, _ = run_single_simulation(start, end, lam, mi)
@@ -167,12 +172,10 @@ def ex1(ro, sim_len, n_simulation):
             avg_packet, instant_avg, n_packets, instants
         )
         totali_pacchetti += n_packets
-
     avg_packet = [a / n_simulation for a in avg_packet]
 
     print("Preparing graphs (may take some time)")
     _, ax = plt.subplots(2, 3)
-
     bin_min = 0
     bin_max = max(totali_pacchetti)
 
@@ -180,7 +183,8 @@ def ex1(ro, sim_len, n_simulation):
         totali_pacchetti, return_counts=True
     )
     empirical_log_n_packets = [np.log(c) for c in n_packet_in_queue_occur]
-    empirical_log_line = get_line(n_packet_in_queue, empirical_log_n_packets)
+    # discard first because want to look at the exponential tail
+    empirical_log_line = get_line(n_packet_in_queue[1:], empirical_log_n_packets[1:])
 
     linspace_n_packet_in_queue = np.linspace(1, bin_max, 100)
 
