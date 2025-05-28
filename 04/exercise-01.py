@@ -128,6 +128,25 @@ def merge_with_avg(avg_p, avg_inst, curr_p, curr_inst) -> (list, list):
     return tmp_pack, tmp_inst
 
 
+def get_line(Xs, Ys):
+    assert len(Xs) == len(Ys)
+    line = np.polyfit(Xs, Ys, 1)
+
+    # residual sum of squares
+    ss_res = np.sum(
+        [(Ys[i] - (Xs[i] * line[0] + line[1])) ** 2 for i in range(len(Xs))]
+    )
+
+    # total sum of squares
+    ss_tmp_mean = np.mean(Ys)
+    ss_tot = np.sum([(y - ss_tmp_mean) ** 2 for y in Ys])
+
+    # r-squared
+    r2 = 1 - (ss_res / ss_tot)
+    print(r2)
+    return line
+
+
 def ex1(ro, sim_len, n_simulation):
     start = 0
     end = sim_len
@@ -160,15 +179,10 @@ def ex1(ro, sim_len, n_simulation):
     n_packet_in_queue, n_packet_in_queue_occur = np.unique(
         totali_pacchetti, return_counts=True
     )
-    empirical_derivative_n_packets = [np.log(c) for c in n_packet_in_queue_occur]
-    empirical_derivative_slope = np.polyfit(
-        n_packet_in_queue, empirical_derivative_n_packets, 1
-    )[0]
+    empirical_log_n_packets = [np.log(c) for c in n_packet_in_queue_occur]
+    empirical_log_line = get_line(n_packet_in_queue, empirical_log_n_packets)
+
     linspace_n_packet_in_queue = np.linspace(1, bin_max, 100)
-    theoretical_n_packet_values = [
-        n_packet_in_queue_occur[1] * math.e ** (empirical_derivative_slope * (x - 1))
-        for x in linspace_n_packet_in_queue
-    ]
 
     ax[0][0].plot(
         n_packet_in_queue,
@@ -177,28 +191,31 @@ def ex1(ro, sim_len, n_simulation):
     )
     ax[0][0].plot(
         linspace_n_packet_in_queue,
-        theoretical_n_packet_values,
+        [
+            math.e ** (empirical_log_line[1] + empirical_log_line[0] * x)
+            for x in linspace_n_packet_in_queue
+        ],
         label="Theoretical values",
     )
-    ax[0][0].legend()
+    ax[0][0].legend(loc="upper right")
 
     ax[0][1].plot(
         n_packet_in_queue[1:],
-        empirical_derivative_n_packets[1:],
-        label="Empirical derivative of packets in queue",
+        empirical_log_n_packets[1:],
+        label="Empirical logarithm of packets in queue",
     )
     ax[0][1].plot(
         n_packet_in_queue[1:],
         [
-            empirical_derivative_n_packets[1] + empirical_derivative_slope * c
-            for c in range(len(n_packet_in_queue) - 1)
+            empirical_log_line[1] + empirical_log_line[0] * c
+            for c in range(1, len(n_packet_in_queue))
         ],
-        label="Theoretical derivative of packets in queue",
+        label="Theoretical logarithm of packets in queue",
     )
-    ax[0][1].legend()
+    ax[0][1].legend(loc="upper right")
 
     ax[0][2].plot(instants, n_packets, label="Packets [y] for each instant [x]")
-    ax[0][2].legend()
+    ax[0][2].legend(loc="upper right")
 
     step_size = math.ceil((bin_max - bin_min) / 100)
 
@@ -207,7 +224,7 @@ def ex1(ro, sim_len, n_simulation):
         np.arange(bin_min - 1 / 2, bin_max + 3 / 2, step_size),
         label="Number of istants with [x] packets in the queue",
     )
-    ax[1][0].legend()
+    ax[1][0].legend(loc="upper right")
 
     ax[1][1].plot(instant_avg, avg_packet, label="Average Packet per instant")
 
@@ -232,13 +249,13 @@ def ex1(ro, sim_len, n_simulation):
         [empirical_mean_n_packets for _ in avg_packet],
         label="Empirical mean of packets",
     )
-    ax[1][1].legend()
+    ax[1][1].legend(loc="upper right")
 
     plt.show()
 
 
 def post_stratify_departure(
-    dep_elapsed: list, dep_queue_waiting: list, ro: float
+        dep_elapsed: list, dep_queue_waiting: list, ro: float
 ) -> (list, list, list):
     lenght: int = max(dep_queue_waiting) + 1
     stratified: list = [[] for _ in range(lenght)]
@@ -316,18 +333,19 @@ def ex2(ro, sim_len, n_simulation):
         [ro * ((1 - ro) ** i) for i in range(len(post_stratified_pi))],
         label="Theoretical probabilities",
     )
-    ax[0].legend()
-    ax[1].legend()
-    ax[2].legend()
+    ax[0].legend(loc="upper right")
+    ax[1].legend(loc="upper right")
+    ax[2].legend(loc="upper right")
     plt.show()
 
 
 def main():
-    sim_time_len = 1000
+    sim_time_len = 5000
     ro = 1 / (2)  # lab/ mi
     n_simulation = 30
 
     ex1(ro, sim_time_len, n_simulation)
+    # ex2(ro, sim_time_len, n_simulation)
 
 
 if __name__ == "__main__":
