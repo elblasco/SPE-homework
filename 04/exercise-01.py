@@ -103,14 +103,14 @@ def ex1(ro, sim_len, n_simulation):
     totali_pacchetti: list = []
     avg_packet: list = []
     instant_avg: list = []
-    n_packets:list = []
-    instants:list = []
-    
+    n_packets: list = []
+    instants: list = []
+
     for sim in range(n_simulation):
         print(f"Start simulation {sim}")
         n_packets, instants, _, _ = run_single_simulation(start, end, lam, mi)
 
-        #assert len(avg_packet) == len(instant_avg)
+        # assert len(avg_packet) == len(instant_avg)
         tmp_pack = []
         tmp_inst = []
         i = j = old_avg = old_pack = 0
@@ -135,7 +135,7 @@ def ex1(ro, sim_len, n_simulation):
                 old_avg = avg_packet[j]
                 i += 1
                 j += 1
-        
+
         avg_packet += n_packets[i:] + avg_packet[j:]
         instant_avg += instants[i:] + instant_avg[j:]
         totali_pacchetti += n_packets
@@ -148,31 +148,55 @@ def ex1(ro, sim_len, n_simulation):
     bin_min = 0
     bin_max = max(totali_pacchetti)
 
-    n_packet_in_queue, n_packet_in_queue_occur = np.unique(totali_pacchetti, return_counts=True)
+    n_packet_in_queue, n_packet_in_queue_occur = np.unique(
+        totali_pacchetti, return_counts=True
+    )
     empirical_derivative_n_packets = [np.log(c) for c in n_packet_in_queue_occur]
-    empirical_derivative_slope = np.polyfit(n_packet_in_queue, empirical_derivative_n_packets, 1)[0]
+    empirical_derivative_slope = np.polyfit(
+        n_packet_in_queue, empirical_derivative_n_packets, 1
+    )[0]
     linspace_n_packet_in_queue = np.linspace(1, bin_max, 100)
-    theoretical_n_packet_values = [n_packet_in_queue_occur[1] * math.e ** (empirical_derivative_slope * (x - 1)) for x in linspace_n_packet_in_queue]
-    
-    ax[0][0].plot(n_packet_in_queue, n_packet_in_queue_occur, label="Sorted unique numbers of packets")
-    ax[0][0].plot(linspace_n_packet_in_queue, theoretical_n_packet_values, label="Theoretical values")
+    theoretical_n_packet_values = [
+        n_packet_in_queue_occur[1] * math.e ** (empirical_derivative_slope * (x - 1))
+        for x in linspace_n_packet_in_queue
+    ]
+
+    ax[0][0].plot(
+        n_packet_in_queue,
+        n_packet_in_queue_occur,
+        label="Sorted unique numbers of packets",
+    )
+    ax[0][0].plot(
+        linspace_n_packet_in_queue,
+        theoretical_n_packet_values,
+        label="Theoretical values",
+    )
     ax[0][0].legend()
-    
-    ax[0][1].plot(n_packet_in_queue[1:], empirical_derivative_n_packets[1:], label="Empirical derivative of packets in queue")
+
     ax[0][1].plot(
         n_packet_in_queue[1:],
-        [empirical_derivative_n_packets[1] + empirical_derivative_slope * c for c in range(len(n_packet_in_queue) - 1)],
-        label="Theoretical derivative of packets in queue"
-        )
+        empirical_derivative_n_packets[1:],
+        label="Empirical derivative of packets in queue",
+    )
+    ax[0][1].plot(
+        n_packet_in_queue[1:],
+        [
+            empirical_derivative_n_packets[1] + empirical_derivative_slope * c
+            for c in range(len(n_packet_in_queue) - 1)
+        ],
+        label="Theoretical derivative of packets in queue",
+    )
     ax[0][1].legend()
-    
+
     ax[0][2].plot(instants, n_packets, label="Packets [y] for each instant [x]")
     ax[0][2].legend()
 
     step_size = math.ceil((bin_max - bin_min) / 100)
 
     ax[1][0].hist(
-        totali_pacchetti, np.arange(bin_min - 1 / 2, bin_max + 3 / 2, step_size), label="Number of istants with [x] packets in the queue"
+        totali_pacchetti,
+        np.arange(bin_min - 1 / 2, bin_max + 3 / 2, step_size),
+        label="Number of istants with [x] packets in the queue",
     )
     ax[1][0].legend()
 
@@ -180,20 +204,30 @@ def ex1(ro, sim_len, n_simulation):
     empirical_mean_n_packets = np.average(avg_packet[int(len(avg_packet) / 4) :])
     theoretical_mean_n_packets = ro / (1 - ro)
     print(theoretical_mean_n_packets, empirical_mean_n_packets)
-    ax[1][1].plot(instant_avg, [theoretical_mean_n_packets for _ in avg_packet], label="Theoretical mean of packets")
-    ax[1][1].plot(instant_avg, [empirical_mean_n_packets for _ in avg_packet], label="Empirical mean of packets")
+    ax[1][1].plot(
+        instant_avg,
+        [theoretical_mean_n_packets for _ in avg_packet],
+        label="Theoretical mean of packets",
+    )
+    ax[1][1].plot(
+        instant_avg,
+        [empirical_mean_n_packets for _ in avg_packet],
+        label="Empirical mean of packets",
+    )
     ax[1][1].legend()
-    
+
     plt.show()
 
-    
-def post_stratify_departure(dep_elapsed: list, dep_queue_waiting: list, ro: float) -> (list, list, list):
+
+def post_stratify_departure(
+    dep_elapsed: list, dep_queue_waiting: list, ro: float
+) -> (list, list, list):
     lenght: int = max(dep_queue_waiting) + 1
     stratified: list = [[] for _ in range(lenght)]
-    
+
     for inqueue, elapsed in zip(dep_queue_waiting, dep_elapsed):
         stratified[inqueue].append(elapsed)
-        
+
     return_mean: list = []
     return_var: list = []
     return_pi: list = []
@@ -201,9 +235,10 @@ def post_stratify_departure(dep_elapsed: list, dep_queue_waiting: list, ro: floa
         return_mean.append(np.average(stratified[i]))
         return_var.append(np.var(stratified[i]))
         return_pi.append(len(stratified[i]) / len(dep_elapsed))
-        #print(i, return_pi[i], len(stratified[i]), dep_queue_waiting.count(i), len(dep_elapsed))
+        # print(i, return_pi[i], len(stratified[i]), dep_queue_waiting.count(i), len(dep_elapsed))
 
-    return (return_mean, return_var, return_pi) 
+    return (return_mean, return_var, return_pi)
+
 
 def ex2(ro, sim_len, n_simulation):
     start = 0
@@ -227,22 +262,43 @@ def ex2(ro, sim_len, n_simulation):
     naive_interval = eta * math.sqrt(naive_var / len(full_departure_elapsed))
     print(f"Naïve Avg {naive_avg} +- {naive_interval}, expected {1 / (mi - lam)}")
 
-    post_stratified_mean, post_stratified_var, post_stratified_pi = post_stratify_departure(
-        full_departure_elapsed, full_departure_queue_waiting, ro
+    post_stratified_mean, post_stratified_var, post_stratified_pi = (
+        post_stratify_departure(
+            full_departure_elapsed, full_departure_queue_waiting, ro
+        )
     )
 
-    post_stratified_avg: float = np.average(post_stratified_mean, weights=post_stratified_pi)
-    post_stratified_var: float = np.average(post_stratified_var, weights=list(map(lambda x: x*x, post_stratified_pi)))
+    post_stratified_avg: float = np.average(
+        post_stratified_mean, weights=post_stratified_pi
+    )
+    post_stratified_var: float = np.average(
+        post_stratified_var, weights=list(map(lambda x: x * x, post_stratified_pi))
+    )
 
-    post_stratified_interval = eta * math.sqrt(post_stratified_var / len(full_departure_elapsed))
-    print(f"Post stratified Avg {post_stratified_avg} +- {post_stratified_interval}, expected {1 / (mi - lam)}")
-    
+    post_stratified_interval = eta * math.sqrt(
+        post_stratified_var / len(full_departure_elapsed)
+    )
+    print(
+        f"Post stratified Avg {post_stratified_avg} +- {post_stratified_interval}, expected {1 / (mi - lam)}"
+    )
+
     _, ax = plt.subplots(1, 3)
 
-    ax[0].hist(full_departure_elapsed, label=f"Departure time over {n_simulation} simuls", density=True)
-    ax[1].hist(full_departure_queue_waiting, label=f"Waiting time in {n_simulation} simuls", density=True)
-    ax[2].plot(post_stratified_pi, label="Probabilities obtained with post-strat")    
-    ax[2].plot([ro*((1 - ro)**i) for i in range(len(post_stratified_pi))], label="Theoretical probabilities")
+    ax[0].hist(
+        full_departure_elapsed,
+        label=f"Departure time over {n_simulation} simuls",
+        density=True,
+    )
+    ax[1].hist(
+        full_departure_queue_waiting,
+        label=f"Waiting time in {n_simulation} simuls",
+        density=True,
+    )
+    ax[2].plot(post_stratified_pi, label="Probabilities obtained with post-strat")
+    ax[2].plot(
+        [ro * ((1 - ro) ** i) for i in range(len(post_stratified_pi))],
+        label="Theoretical probabilities",
+    )
     ax[0].legend()
     ax[1].legend()
     ax[2].legend()
@@ -253,7 +309,7 @@ def main():
     sim_time_len = 100000
     ro = 1 / (2)  # lab/ mi
     n_simulation = 2
-    
+
     ex1(ro, sim_time_len, n_simulation)
 
 
