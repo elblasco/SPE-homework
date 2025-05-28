@@ -135,15 +135,9 @@ def ex1(ro, sim_len, n_simulation):
                 old_avg = avg_packet[j]
                 i += 1
                 j += 1
-
-        # tmp_inst += instants[i:]
-        # tmp_pack += n_packets[i:]
-        # tmp_inst += instant_avg[j:]
-        # tmp_pack += avg_packet[j:]
-
+        
         avg_packet += n_packets[i:] + avg_packet[j:]
         instant_avg += instants[i:] + instant_avg[j:]
-
         totali_pacchetti += n_packets
 
     avg_packet = [a / n_simulation for a in avg_packet]
@@ -156,8 +150,7 @@ def ex1(ro, sim_len, n_simulation):
 
     n_packet_in_queue, n_packet_in_queue_occur = np.unique(totali_pacchetti, return_counts=True)
     empirical_derivative_n_packets = [np.log(c) for c in n_packet_in_queue_occur]
-    empirical_derivative_slope = (
-        empirical_derivative_n_packets[int(len(empirical_derivative_n_packets) / 2)] - empirical_derivative_n_packets[1]) / (n_packet_in_queue[int(len(n_packet_in_queue) / 2)] - n_packet_in_queue[1])
+    empirical_derivative_slope = np.polyfit(n_packet_in_queue, empirical_derivative_n_packets, 1)[0]
     linspace_n_packet_in_queue = np.linspace(1, bin_max, 100)
     theoretical_n_packet_values = [n_packet_in_queue_occur[1] * math.e ** (empirical_derivative_slope * (x - 1)) for x in linspace_n_packet_in_queue]
     
@@ -259,7 +252,7 @@ def ex2(ro, sim_len, n_simulation):
 def main():
     sim_time_len = 100000
     ro = 1 / (2)  # lab/ mi
-    n_simulation = 5
+    n_simulation = 2
     
     ex1(ro, sim_time_len, n_simulation)
 
