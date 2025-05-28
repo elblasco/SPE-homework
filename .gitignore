@@ -1,6 +1,7 @@
 auto/
 .idea/
 .venv/
+.fleet/
 
 *.png
 
