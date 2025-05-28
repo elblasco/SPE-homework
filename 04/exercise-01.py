@@ -151,6 +151,14 @@ def get_line(Xs, Ys):
     return line
 
 
+def unique_sum(totali_pacchetti, totali_pacchetti_durata, maxim):
+    ret = [0 for i in range(maxim + 1)]
+    for p, d in zip(totali_pacchetti, totali_pacchetti_durata):
+        ret[p] += d
+
+    return range(maxim + 1), ret
+
+
 def ex1(ro, sim_len, n_simulation):
     start = 0
     end = sim_len
@@ -158,6 +166,7 @@ def ex1(ro, sim_len, n_simulation):
     mi = lam / ro  # arrivals
 
     totali_pacchetti: list = []
+    totali_pacchetti_durata: list = []
     avg_packet: list = []
     instant_avg: list = []
     n_packets: list = []
@@ -171,7 +180,10 @@ def ex1(ro, sim_len, n_simulation):
         avg_packet, instant_avg = merge_with_avg(
             avg_packet, instant_avg, n_packets, instants
         )
-        totali_pacchetti += n_packets
+
+        instants_mod = [start] + instants + [end]
+        totali_pacchetti += [0] + n_packets
+        totali_pacchetti_durata += [instants_mod[i] - instants_mod[i - 1] for i in range(1, len(instants_mod))]
     avg_packet = [a / n_simulation for a in avg_packet]
 
     print("Preparing graphs (may take some time)")
@@ -179,19 +191,20 @@ def ex1(ro, sim_len, n_simulation):
     bin_min = 0
     bin_max = max(totali_pacchetti)
 
-    n_packet_in_queue, n_packet_in_queue_occur = np.unique(
-        totali_pacchetti, return_counts=True
+    n_packet_in_queue, n_packet_in_queue_occur = unique_sum(
+        totali_pacchetti, totali_pacchetti_durata, bin_max
     )
     empirical_log_n_packets = [np.log(c) for c in n_packet_in_queue_occur]
     # discard first because want to look at the exponential tail
-    empirical_log_line = get_line(n_packet_in_queue[1:], empirical_log_n_packets[1:])
+    empirical_log_line = get_line(n_packet_in_queue, empirical_log_n_packets)
 
-    linspace_n_packet_in_queue = np.linspace(1, bin_max, 100)
+    linspace_n_packet_in_queue = np.linspace(0, bin_max, 100)
 
-    ax[0][0].plot(
+    ax[0][0].fill_between(
         n_packet_in_queue,
         n_packet_in_queue_occur,
-        label="Sorted unique numbers of packets",
+        alpha=0.2,
+        color="orange"
     )
     ax[0][0].plot(
         linspace_n_packet_in_queue,
@@ -201,20 +214,25 @@ def ex1(ro, sim_len, n_simulation):
         ],
         label="Theoretical values",
     )
+    ax[0][0].plot(
+        n_packet_in_queue,
+        n_packet_in_queue_occur,
+        label="Sorted unique numbers of packets",
+    )
     ax[0][0].legend(loc="upper right")
 
     ax[0][1].plot(
-        n_packet_in_queue[1:],
-        empirical_log_n_packets[1:],
-        label="Empirical logarithm of packets in queue",
-    )
-    ax[0][1].plot(
-        n_packet_in_queue[1:],
+        n_packet_in_queue,
         [
             empirical_log_line[1] + empirical_log_line[0] * c
-            for c in range(1, len(n_packet_in_queue))
+            for c in range(len(n_packet_in_queue))
         ],
         label="Theoretical logarithm of packets in queue",
+    )
+    ax[0][1].plot(
+        n_packet_in_queue,
+        empirical_log_n_packets,
+        label="Empirical logarithm of packets in queue",
     )
     ax[0][1].legend(loc="upper right")
 
