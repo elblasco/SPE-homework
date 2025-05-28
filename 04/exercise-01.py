@@ -94,6 +94,40 @@ def run_single_simulation(start_time, end_time, lamb, mi) -> (list, list, list, 
     return packets_per_istant, istants, departure_elapsed, departure_queue_waited
 
 
+def merge_with_avg(avg_p, avg_inst, curr_p, curr_inst) -> (list, list):
+    assert len(avg_p) == len(avg_inst)
+    tmp_pack = []
+    tmp_inst = []
+    i = j = old_avg = old_pack = 0
+    while i < len(curr_p) and j < len(avg_p):
+        t_i = curr_inst[i]
+        t_j = avg_inst[j]
+
+        if t_i < t_j:
+            tmp_inst.append(curr_inst[i])
+            tmp_pack.append(curr_p[i] + old_avg)
+            old_pack = curr_p[i]
+            i += 1
+        elif t_i > t_j:
+            tmp_inst.append(avg_inst[j])
+            tmp_pack.append(avg_p[j] + old_pack)
+            old_avg = avg_p[j]
+            j += 1
+        else:  # same instant
+            tmp_inst.append(curr_inst[i])
+            tmp_pack.append(curr_p[i] + avg_p[j])
+            old_pack = curr_p[i]
+            old_avg = avg_p[j]
+            i += 1
+            j += 1
+
+    tmp_pack += curr_p[i:] + avg_p[j:]
+    tmp_inst += curr_inst[i:] + avg_inst[j:]
+
+    # assert all(tmp_inst[i] <= tmp_inst[i + 1] for i in range(len(tmp_inst) - 1))
+    return tmp_pack, tmp_inst
+
+
 def ex1(ro, sim_len, n_simulation):
     start = 0
     end = sim_len
@@ -110,34 +144,9 @@ def ex1(ro, sim_len, n_simulation):
         print(f"Start simulation {sim}")
         n_packets, instants, _, _ = run_single_simulation(start, end, lam, mi)
 
-        # assert len(avg_packet) == len(instant_avg)
-        tmp_pack = []
-        tmp_inst = []
-        i = j = old_avg = old_pack = 0
-        while i < len(n_packets) and j < len(avg_packet):
-            t_i = instants[i]
-            t_j = instant_avg[j]
-
-            if t_i < t_j:
-                tmp_inst.append(instants[i])
-                tmp_pack.append(n_packets[i] + old_avg)
-                old_pack = n_packets[i]
-                i += 1
-            elif t_i > t_j:
-                tmp_inst.append(instant_avg[j])
-                tmp_pack.append(avg_packet[j] + old_pack)
-                old_avg = avg_packet[j]
-                j += 1
-            else:  # same instant
-                tmp_inst.append(instants[i])
-                tmp_pack.append(n_packets[i] + avg_packet[j])
-                old_pack = n_packets[i]
-                old_avg = avg_packet[j]
-                i += 1
-                j += 1
-
-        avg_packet += n_packets[i:] + avg_packet[j:]
-        instant_avg += instants[i:] + instant_avg[j:]
+        avg_packet, instant_avg = merge_with_avg(
+            avg_packet, instant_avg, n_packets, instants
+        )
         totali_pacchetti += n_packets
 
     avg_packet = [a / n_simulation for a in avg_packet]
@@ -201,7 +210,16 @@ def ex1(ro, sim_len, n_simulation):
     ax[1][0].legend()
 
     ax[1][1].plot(instant_avg, avg_packet, label="Average Packet per instant")
-    empirical_mean_n_packets = np.average(avg_packet[int(len(avg_packet) / 4) :])
+
+    old_packet = 0
+    old_instant = 0
+    empirical_sum_n_packets = 0
+    for packet, instant in zip(avg_packet, instant_avg):
+        empirical_sum_n_packets += old_packet * (instant - old_instant)
+        old_instant = instant
+        old_packet = packet
+    empirical_mean_n_packets = empirical_sum_n_packets / (end - start)
+
     theoretical_mean_n_packets = ro / (1 - ro)
     print(theoretical_mean_n_packets, empirical_mean_n_packets)
     ax[1][1].plot(
@@ -235,7 +253,6 @@ def post_stratify_departure(
         return_mean.append(np.average(stratified[i]))
         return_var.append(np.var(stratified[i]))
         return_pi.append(len(stratified[i]) / len(dep_elapsed))
-        # print(i, return_pi[i], len(stratified[i]), dep_queue_waiting.count(i), len(dep_elapsed))
 
     return (return_mean, return_var, return_pi)
 
@@ -306,9 +323,9 @@ def ex2(ro, sim_len, n_simulation):
 
 
 def main():
-    sim_time_len = 100000
+    sim_time_len = 1000
     ro = 1 / (2)  # lab/ mi
-    n_simulation = 2
+    n_simulation = 30
 
     ex1(ro, sim_time_len, n_simulation)
 
