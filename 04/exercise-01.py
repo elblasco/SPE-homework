@@ -131,15 +131,12 @@ def merge_with_avg(avg_p, avg_inst, curr_p, curr_inst) -> (list, list):
 def get_line(Xs, Ys):
     assert len(Xs) == len(Ys)
     lenght = len(Xs)
-    print(Xs[0], Ys[0])
     weights = np.ones_like(Xs)
     weights[0] = 1000
     line = np.polyfit(Xs, Ys, 1, w=weights)
 
     # residual sum of squares
-    ss_res = np.sum(
-        [(Ys[i] - (Xs[i] * line[0] + line[1])) ** 2 for i in range(lenght)]
-    )
+    ss_res = np.sum([(Ys[i] - (Xs[i] * line[0] + line[1])) ** 2 for i in range(lenght)])
 
     # total sum of squares
     ss_tmp_mean = np.mean(Ys)
@@ -147,7 +144,6 @@ def get_line(Xs, Ys):
 
     # r-squared
     r2 = 1 - (ss_res / ss_tot)
-    print(r2)
     return line
 
 
@@ -162,8 +158,8 @@ def unique_sum(totali_pacchetti, totali_pacchetti_durata, maxim):
 def ex1(ro, sim_len, n_simulation):
     start = 0
     end = sim_len
-    lam = 1  # departures
-    mi = lam / ro  # arrivals
+    lam = 1  # arrivals
+    mi = lam / ro  # departures
 
     totali_pacchetti: list = []
     totali_pacchetti_durata: list = []
@@ -183,7 +179,9 @@ def ex1(ro, sim_len, n_simulation):
 
         instants_mod = [start] + instants + [end]
         totali_pacchetti += [0] + n_packets
-        totali_pacchetti_durata += [instants_mod[i] - instants_mod[i - 1] for i in range(1, len(instants_mod))]
+        totali_pacchetti_durata += [
+            instants_mod[i] - instants_mod[i - 1] for i in range(1, len(instants_mod))
+        ]
     avg_packet = [a / n_simulation for a in avg_packet]
 
     print("Preparing graphs (may take some time)")
@@ -201,10 +199,7 @@ def ex1(ro, sim_len, n_simulation):
     linspace_n_packet_in_queue = np.linspace(0, bin_max, 100)
 
     ax[0][0].fill_between(
-        n_packet_in_queue,
-        n_packet_in_queue_occur,
-        alpha=0.2,
-        color="orange"
+        n_packet_in_queue, n_packet_in_queue_occur, alpha=0.2, color="orange"
     )
     ax[0][0].plot(
         linspace_n_packet_in_queue,
@@ -260,7 +255,12 @@ def ex1(ro, sim_len, n_simulation):
     empirical_mean_n_packets = empirical_sum_n_packets / (end - start)
 
     theoretical_mean_n_packets = ro / (1 - ro)
-    print(theoretical_mean_n_packets, empirical_mean_n_packets)
+    print(
+        "Theoretical mean:",
+        theoretical_mean_n_packets,
+        "and empirical mean",
+        empirical_mean_n_packets,
+    )
     ax[1][1].plot(
         instant_avg,
         [theoretical_mean_n_packets for _ in avg_packet],
@@ -277,7 +277,7 @@ def ex1(ro, sim_len, n_simulation):
 
 
 def post_stratify_departure(
-        dep_elapsed: list, dep_queue_waiting: list, ro: float
+    dep_elapsed: list, dep_queue_waiting: list, ro: float
 ) -> (list, list, list):
     lenght: int = max(dep_queue_waiting) + 1
     stratified: list = [[] for _ in range(lenght)]
@@ -291,6 +291,7 @@ def post_stratify_departure(
     for i in range(lenght):
         return_mean.append(np.average(stratified[i]))
         return_var.append(np.var(stratified[i]))
+        # ro * (1 - ro) ** i
         return_pi.append(len(stratified[i]) / len(dep_elapsed))
 
     return (return_mean, return_var, return_pi)
@@ -299,8 +300,8 @@ def post_stratify_departure(
 def ex2(ro, sim_len, n_simulation):
     start = 0
     end = sim_len
-    lam = 1  # departures
-    mi = lam / ro  # arrivals
+    lam = 1  # arrivals
+    mi = lam / ro  # departures
 
     full_departure_elapsed = []
     full_departure_queue_waiting = []
@@ -352,7 +353,7 @@ def ex2(ro, sim_len, n_simulation):
     )
     ax[2].plot(post_stratified_pi, label="Probabilities obtained with post-strat")
     ax[2].plot(
-        [ro * ((1 - ro) ** i) for i in range(len(post_stratified_pi))],
+        [ro**i * (1 - ro) for i in range(len(post_stratified_pi))],
         label="Theoretical probabilities",
     )
     ax[0].legend(loc="upper right")
@@ -363,11 +364,11 @@ def ex2(ro, sim_len, n_simulation):
 
 def main():
     sim_time_len = 5000
-    ro = 1 / (2)  # lab/ mi
+    ro = 2 / 7  # lab/ mi
     n_simulation = 30
 
-    ex1(ro, sim_time_len, n_simulation)
-    # ex2(ro, sim_time_len, n_simulation)
+    # ex1(ro, sim_time_len, n_simulation)
+    ex2(ro, sim_time_len, n_simulation)
 
 
 if __name__ == "__main__":
