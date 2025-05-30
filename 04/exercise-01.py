@@ -181,10 +181,9 @@ def ex1(ro, sim_len, n_simulation):
 
     ax[1][1].plot(instant_avg, avg_packet, label="Average Packet per instant")
 
-    empirical_mean_n_packets = mean_time_weighted(avg_packet, instant_avg, end - start)
     theoretical_mean_n_packets = ro / (1 - ro)
-
     grand_mean: float = float(np.average(mean_ith_simulation))
+
     varian = 1 / (n_simulation - 1) * sum((mean_i - grand_mean) ** 2 for mean_i in mean_ith_simulation)
     eta = 1.96  # for confidence level 0.95
     ci_grand_mean = eta * math.sqrt(varian / n_simulation)
@@ -193,7 +192,7 @@ def ex1(ro, sim_len, n_simulation):
         "Theoretical mean:",
         theoretical_mean_n_packets,
         "and empirical mean",
-        empirical_mean_n_packets,
+        grand_mean,
         "+-",
         ci_grand_mean,
         "(with var",
@@ -216,8 +215,8 @@ def ex1(ro, sim_len, n_simulation):
 
 
 def main():
-    sim_time_len = 5000
-    ro = 2 / 7  # lab/ mi
+    sim_time_len = 50000
+    ro = 100 / 101  # lab/ mi
     n_simulation = 30
 
     ex1(ro, sim_time_len, n_simulation)
