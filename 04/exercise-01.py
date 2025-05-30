@@ -67,6 +67,19 @@ def unique_sum(totali_pacchetti, totali_pacchetti_durata, maxim):
     return range(maxim + 1), ret
 
 
+def mean_time_weighted(n_packets: list, instants: list, duration: float):
+    old_packet = 0
+    old_instant = 0
+    empirical_sum_n_packets = 0
+
+    for packet, instant in zip(n_packets, instants):
+        empirical_sum_n_packets += old_packet * (instant - old_instant)
+        old_instant = instant
+        old_packet = packet
+
+    return empirical_sum_n_packets / duration
+
+
 def ex1(ro, sim_len, n_simulation):
     start = 0
     end = sim_len
@@ -75,6 +88,7 @@ def ex1(ro, sim_len, n_simulation):
 
     totali_pacchetti: list = []
     totali_pacchetti_durata: list = []
+    mean_ith_simulation: list = []
     avg_packet: list = []
     instant_avg: list = []
     n_packets: list = []
@@ -84,10 +98,13 @@ def ex1(ro, sim_len, n_simulation):
     for sim in range(n_simulation):
         print(f"Start simulation {sim}")
         server: QueueServer = QueueServer(start, end, lam, mi)
-        stats = server.simulate(lambda s, time, event: (
+        stats = server.simulate(lambda s, time, event: [(
             s.curr_load() + (1 if event == EventType.ARRIVAL else 0) - (1 if event == EventType.DEPARTURE else 0),
-            time))
+            time)])
         n_packets, instants = map(lambda x: list(x), zip(*stats))
+
+        mean_i = mean_time_weighted(n_packets, instants, end - start)
+        mean_ith_simulation.append(float(mean_i))
 
         avg_packet, instant_avg = merge_with_avg(
             avg_packet, instant_avg, n_packets, instants
@@ -112,7 +129,6 @@ def ex1(ro, sim_len, n_simulation):
         totali_pacchetti, totali_pacchetti_durata, bin_max
     )
     empirical_log_n_packets = [np.log(c) for c in n_packet_in_queue_occur]
-    print(n_packet_in_queue_occur)
     # discard first because want to look at the exponential tail
     empirical_log_line = get_line(list(n_packet_in_queue), empirical_log_n_packets)
 
@@ -165,21 +181,24 @@ def ex1(ro, sim_len, n_simulation):
 
     ax[1][1].plot(instant_avg, avg_packet, label="Average Packet per instant")
 
-    old_packet = 0
-    old_instant = 0
-    empirical_sum_n_packets = 0
-    for packet, instant in zip(avg_packet, instant_avg):
-        empirical_sum_n_packets += old_packet * (instant - old_instant)
-        old_instant = instant
-        old_packet = packet
-    empirical_mean_n_packets = empirical_sum_n_packets / (end - start)
-
+    empirical_mean_n_packets = mean_time_weighted(avg_packet, instant_avg, end - start)
     theoretical_mean_n_packets = ro / (1 - ro)
+
+    grand_mean: float = float(np.average(mean_ith_simulation))
+    varian = 1 / (n_simulation - 1) * sum((mean_i - grand_mean) ** 2 for mean_i in mean_ith_simulation)
+    eta = 1.96  # for confidence level 0.95
+    ci_grand_mean = eta * math.sqrt(varian / n_simulation)
+
     print(
         "Theoretical mean:",
         theoretical_mean_n_packets,
         "and empirical mean",
         empirical_mean_n_packets,
+        "+-",
+        ci_grand_mean,
+        "(with var",
+        varian,
+        ")"
     )
     ax[1][1].plot(
         instant_avg,

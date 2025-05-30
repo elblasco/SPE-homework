@@ -20,8 +20,7 @@ def post_stratify_departure(
     for i in range(lenght):
         return_mean.append(np.average(stratified[i]))
         return_var.append(np.var(stratified[i]))
-        # ro * (1 - ro) ** i
-        return_pi.append(len(stratified[i]) / len(dep_elapsed))
+        return_pi.append((1 - ro) * ro ** i)
 
     return return_mean, return_var, return_pi
 
@@ -92,7 +91,7 @@ def ex2(ro, sim_len, n_simulation):
     )
     ax[2].plot(post_stratified_pi, label="Probabilities obtained with post-strat")
     ax[2].plot(
-        [ro ** i * (1 - ro) for i in range(len(post_stratified_pi))],
+        [(1 - ro) * ro ** i for i in range(len(post_stratified_pi))],
         label="Theoretical probabilities",
     )
     ax[0].legend(loc="upper right")
