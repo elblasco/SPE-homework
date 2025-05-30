@@ -206,7 +206,7 @@ def ex1(ro, sim_len, n_simulation):
     )
     ax[1][1].plot(
         instant_avg,
-        [empirical_mean_n_packets for _ in avg_packet],
+        [grand_mean for _ in avg_packet],
         label="Empirical mean of packets",
     )
     ax[1][1].legend(loc="upper right")
