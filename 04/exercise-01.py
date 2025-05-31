@@ -39,19 +39,19 @@ def merge_with_avg(avg_p, avg_inst, curr_p, curr_inst) -> tuple[list, list]:
     return tmp_pack, tmp_inst
 
 
-def get_line(Xs: list[float], Ys: list[float]):
-    assert len(Xs) == len(Ys)
-    lenght = len(Xs)
-    weights = np.ones_like(Xs)
+def get_line(xs: list[float], ys: list[float]):
+    assert len(xs) == len(ys)
+    lenght = len(xs)
+    weights = np.ones_like(xs)
     weights[0] = 1000
-    line = np.polyfit(Xs, Ys, 1, w=weights)
+    line = np.polyfit(xs, ys, 1, w=weights)
 
     # residual sum of squares
-    ss_res: float = np.sum([(Ys[i] - (Xs[i] * line[0] + line[1])) ** 2 for i in range(lenght)])
+    ss_res: float = np.sum([(ys[i] - (xs[i] * line[0] + line[1])) ** 2 for i in range(lenght)])
 
     # total sum of squares
-    ss_tmp_mean: float = float(np.average(Ys))
-    ss_tot: float = np.sum([(y - ss_tmp_mean) ** 2 for y in Ys])
+    ss_tmp_mean: float = float(np.average(ys))
+    ss_tot: float = np.sum([(y - ss_tmp_mean) ** 2 for y in ys])
 
     # r-squared
     r2 = 1 - (ss_res / ss_tot)
