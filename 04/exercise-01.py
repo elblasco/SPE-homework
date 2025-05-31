@@ -67,9 +67,9 @@ def unique_sum(totali_pacchetti, totali_pacchetti_durata, maxim):
     return range(maxim + 1), ret
 
 
-def mean_time_weighted(n_packets: list, instants: list, duration: float, initial_n_packet: int = 0):
+def mean_time_weighted(n_packets: list, instants: list, start: float, end: float, initial_n_packet: int = 0):
     old_packet = initial_n_packet
-    old_instant = 0
+    old_instant = start
     empirical_sum_n_packets = 0
 
     for packet, instant in zip(n_packets, instants):
@@ -77,7 +77,65 @@ def mean_time_weighted(n_packets: list, instants: list, duration: float, initial
         old_instant = instant
         old_packet = packet
 
-    return empirical_sum_n_packets / duration
+
+    empirical_sum_n_packets += old_packet * (end - old_instant)
+    
+    return empirical_sum_n_packets / (end - start)
+
+def plot_distribution_packets(ax1, ax2, start, end, n_packets, instants):
+    totali_pacchetti = [0] + n_packets
+
+    bin_max = max(totali_pacchetti)
+    
+    instants_mod = [start] + instants + [end]
+
+    totali_pacchetti_durata = [
+        instants_mod[i] - instants_mod[i - 1]
+        for i in range(1, len(instants_mod))
+    ]
+
+
+    n_packet_in_queue, n_packet_in_queue_occur = unique_sum(
+        totali_pacchetti, totali_pacchetti_durata, bin_max
+    )
+    empirical_log_n_packets = [np.log(c) for c in n_packet_in_queue_occur]
+    # discard first because want to look at the exponential tail
+    empirical_log_line = get_line(list(n_packet_in_queue), empirical_log_n_packets)
+
+    linspace_n_packet_in_queue = np.linspace(0, bin_max, 100)
+    
+    ax1.fill_between(
+        n_packet_in_queue, n_packet_in_queue_occur, alpha=0.2, color="orange"
+    )
+    ax1.plot(
+        linspace_n_packet_in_queue,
+        [
+            math.e ** (empirical_log_line[1] + empirical_log_line[0] * x)
+            for x in linspace_n_packet_in_queue
+        ],
+        label="Theoretical values",
+    )
+    ax1.plot(
+        n_packet_in_queue,
+        n_packet_in_queue_occur,
+        label="Sorted unique numbers of packets",
+    )
+    ax1.legend(loc="upper right")
+
+    ax2.plot(
+        n_packet_in_queue,
+        [
+            empirical_log_line[1] + empirical_log_line[0] * c
+            for c in range(len(n_packet_in_queue))
+        ],
+        label="Theoretical logarithm of packets in queue",
+    )
+    ax2.plot(
+        n_packet_in_queue,
+        empirical_log_n_packets,
+        label="Empirical logarithm of packets in queue",
+    )
+    ax2.legend(loc="upper right")
 
 
 def ex1(ro, sim_len, n_simulation):
@@ -85,9 +143,7 @@ def ex1(ro, sim_len, n_simulation):
     end = sim_len
     lam = 1  # arrivals
     mi = lam / ro  # departures
-
-    totali_pacchetti: list = []
-    totali_pacchetti_durata: list = []
+    
     mean_ith_simulation: list = []
     avg_packet: list = []
     instant_avg: list = []
@@ -103,80 +159,21 @@ def ex1(ro, sim_len, n_simulation):
             time)])
         n_packets, instants = map(lambda x: list(x), zip(*stats))
 
-        mean_i = mean_time_weighted(n_packets, instants, end - start)
+        mean_i = mean_time_weighted(n_packets, instants, start, end)
         mean_ith_simulation.append(float(mean_i))
 
         avg_packet, instant_avg = merge_with_avg(
             avg_packet, instant_avg, n_packets, instants
         )
 
-    instants_mod = [start] + instants + [end]
-    totali_pacchetti += [0] + n_packets
-    totali_pacchetti_durata += [
-        instants_mod[i] - instants_mod[i - 1]
-        for i in range(1, len(instants_mod))
-
-    ]
-
     avg_packet = [a / n_simulation for a in avg_packet]
 
     print("Preparing graphs (may take some time)")
-    _, ax = plt.subplots(2, 3)
-    bin_min = 0
-    bin_max = max(totali_pacchetti)
+    _, ax = plt.subplots(2, 2)
 
-    n_packet_in_queue, n_packet_in_queue_occur = unique_sum(
-        totali_pacchetti, totali_pacchetti_durata, bin_max
-    )
-    empirical_log_n_packets = [np.log(c) for c in n_packet_in_queue_occur]
-    # discard first because want to look at the exponential tail
-    empirical_log_line = get_line(list(n_packet_in_queue), empirical_log_n_packets)
-
-    linspace_n_packet_in_queue = np.linspace(0, bin_max, 100)
-
-    ax[0][0].fill_between(
-        n_packet_in_queue, n_packet_in_queue_occur, alpha=0.2, color="orange"
-    )
-    ax[0][0].plot(
-        linspace_n_packet_in_queue,
-        [
-            math.e ** (empirical_log_line[1] + empirical_log_line[0] * x)
-            for x in linspace_n_packet_in_queue
-        ],
-        label="Theoretical values",
-    )
-    ax[0][0].plot(
-        n_packet_in_queue,
-        n_packet_in_queue_occur,
-        label="Sorted unique numbers of packets",
-    )
-    ax[0][0].legend(loc="upper right")
-
-    ax[0][1].plot(
-        n_packet_in_queue,
-        [
-            empirical_log_line[1] + empirical_log_line[0] * c
-            for c in range(len(n_packet_in_queue))
-        ],
-        label="Theoretical logarithm of packets in queue",
-    )
-    ax[0][1].plot(
-        n_packet_in_queue,
-        empirical_log_n_packets,
-        label="Empirical logarithm of packets in queue",
-    )
-    ax[0][1].legend(loc="upper right")
-
-    ax[0][2].plot(instants, n_packets, label="Packets [y] for each instant [x]")
-    ax[0][2].legend(loc="upper right")
-
-    step_size = math.ceil((bin_max - bin_min) / 100)
-
-    ax[1][0].hist(
-        totali_pacchetti,
-        np.arange(bin_min - 1 / 2, bin_max + 3 / 2, step_size),
-        label="Number of istants with [x] packets in the queue",
-    )
+    plot_distribution_packets(ax[0][0], ax[0][1], start, end, n_packets, instants)
+    
+    ax[1][0].plot(instants, n_packets, label="Packets [y] for each instant [x]")
     ax[1][0].legend(loc="upper right")
 
     ax[1][1].plot(instant_avg, avg_packet, label="Average Packet per instant")
@@ -259,28 +256,34 @@ def time_based_overlapping_batch_mean(n_packets: list, instants: list, batch_tim
 
         while instants[window_end] < batch_end:
             window_end += 1
-        mean_ith_batch.append(mean_time_weighted(n_packets[window_start:window_end], instants[window_start:window_end], batch_time_size, initial_n_packet = old_n_packet))
+        
+        mean_ith_batch.append(mean_time_weighted(n_packets[window_start:window_end], instants[window_start:window_end], batch_start, batch_end, initial_n_packet = old_n_packet))
         
     return mean_ith_batch
 
     
-def test_overlapping_batch_means(lam: float, mi: float):
-    server: QueueServer = QueueServer(0, 200_000, lam, mi)
+def test_overlapping_batch_means(lam: float, mi: float, sim_time_len: float):
+    simulation_end = sim_time_len
+    simulation_start = 0
+    server: QueueServer = QueueServer(simulation_start, simulation_end, lam, mi)
     packets_and_instants = server.simulate(lambda s, time, event: [(
         s.curr_load() + (1 if event == EventType.ARRIVAL else 0) - (1 if event == EventType.DEPARTURE else 0),
         time)])
     n_packets, instants = map(lambda x: list(x), zip(*packets_and_instants))
 
-    mean_ith_batch = time_based_overlapping_batch_mean(n_packets, instants, 1000, 1000, 0, 200_000)
-
-    print(mean_ith_batch)
+    mean_ith_batch = time_based_overlapping_batch_mean(n_packets, instants, 1_000, 10_001, simulation_start, simulation_end)
     
     grand_mean = np.average(mean_ith_batch)
     variance_estimator = 1/(len(mean_ith_batch) - 1) * sum((mean_i - grand_mean) ** 2 for mean_i in mean_ith_batch)
     eta = 1.96  # for confidence level 0.95
     ci_grand_mean = eta * math.sqrt(variance_estimator / len(mean_ith_batch))
+
+    expected_grand_mean = mean_time_weighted(n_packets, instants, simulation_start, simulation_end)
+    
     print(
-        "Batch Overlapping Means method empirical mean",
+        "Batch Overlapping Means method, expected mean",
+        expected_grand_mean,
+        "empirical mean",
         grand_mean,
         "+-",
         ci_grand_mean,
@@ -288,16 +291,21 @@ def test_overlapping_batch_means(lam: float, mi: float):
         variance_estimator,
         ")"
     )
-    # _, ax = plt.subplots(1, 2)
-    # ax[0][0].hist(mean_ith_batch)
-    # plt.show()
+    
+    _, ax = plt.subplots(2, 2)
+
+    plot_distribution_packets(ax[0][0], ax[0][1], simulation_start, simulation_end, n_packets, instants)
+
+    ax[1][0].hist(mean_ith_batch, bins = 80)
+    
+    plt.show()
     
 def main():
     sim_time_len = 50_000
     ro = 1 / 2  # lab/ mi
-    n_simulation = 5
+    n_simulation = 10
 
-    test_overlapping_batch_means(1, 1/ro)
+    test_overlapping_batch_means(1, 1/ro, sim_time_len * n_simulation)
     ex1(ro, sim_time_len, n_simulation)
 
 
