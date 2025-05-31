@@ -67,8 +67,8 @@ def unique_sum(totali_pacchetti, totali_pacchetti_durata, maxim):
     return range(maxim + 1), ret
 
 
-def mean_time_weighted(n_packets: list, instants: list, duration: float):
-    old_packet = 0
+def mean_time_weighted(n_packets: list, instants: list, duration: float, initial_n_packet: int = 0):
+    old_packet = initial_n_packet
     old_instant = 0
     empirical_sum_n_packets = 0
 
@@ -214,13 +214,93 @@ def ex1(ro, sim_len, n_simulation):
     plt.show()
 
 
-def main():
-    sim_time_len = 50000
-    ro = 100 / 101  # lab/ mi
-    n_simulation = 30
+def test_batch_means(lam: float, mi: float):
+    server: QueueServer = QueueServer(0, 100_000, lam, mi)
+    stats = server.simulate(lambda s, time, event: [(
+        s.curr_load() + (1 if event == EventType.ARRIVAL else 0) - (1 if event == EventType.DEPARTURE else 0),
+        time)])
+    n_packets, instants = map(lambda x: list(x), zip(*stats))
+    batch_num = len(n_packets)/100
+    splitted_n_packets = np.array_split(n_packets, batch_num)
+    mean_ith_batch = [np.average(batch) for batch in splitted_n_packets]
+    grand_mean = np.average(mean_ith_batch)
+    variance_estimator = 1/(batch_num - 1) * sum((mean_i - grand_mean) ** 2 for mean_i in mean_ith_batch)
+    eta = 1.96  # for confidence level 0.95
+    ci_grand_mean = eta * math.sqrt(variance_estimator / batch_num)
+    print(
+        "Batch Means method empirical mean",
+        grand_mean,
+        "+-",
+        ci_grand_mean,
+        "(with var",
+        variance_estimator,
+        ")"
+    )
+    _, ax = plt.subplots(1, 2)
+    ax[0][0].hist(mean_ith_batch)
+    plt.show()
 
+
+# batch_time_size < (end - start) 
+def time_based_overlapping_batch_mean(n_packets: list, instants: list, batch_time_size: int, batch_number: int, start: int, end: int) -> list:
+    mean_ith_batch: list = []
+    step_size = (end - start - batch_time_size) / (batch_number - 1)
+    window_start = window_end = 0
+    old_n_packet = 0
+    
+    for batch in range(batch_number):
+        batch_start: int = start + (step_size * batch)
+        batch_end: int = batch_start + batch_time_size
+        while instants[window_start] < batch_start:
+            old_n_packet = n_packets[window_start]
+            window_start += 1
+
+        window_end = max(window_start, window_end)
+
+        while instants[window_end] < batch_end:
+            window_end += 1
+        mean_ith_batch.append(mean_time_weighted(n_packets[window_start:window_end], instants[window_start:window_end], batch_time_size, initial_n_packet = old_n_packet))
+        
+    return mean_ith_batch
+
+    
+def test_overlapping_batch_means(lam: float, mi: float):
+    server: QueueServer = QueueServer(0, 200_000, lam, mi)
+    packets_and_instants = server.simulate(lambda s, time, event: [(
+        s.curr_load() + (1 if event == EventType.ARRIVAL else 0) - (1 if event == EventType.DEPARTURE else 0),
+        time)])
+    n_packets, instants = map(lambda x: list(x), zip(*packets_and_instants))
+
+    mean_ith_batch = time_based_overlapping_batch_mean(n_packets, instants, 1000, 1000, 0, 200_000)
+
+    print(mean_ith_batch)
+    
+    grand_mean = np.average(mean_ith_batch)
+    variance_estimator = 1/(len(mean_ith_batch) - 1) * sum((mean_i - grand_mean) ** 2 for mean_i in mean_ith_batch)
+    eta = 1.96  # for confidence level 0.95
+    ci_grand_mean = eta * math.sqrt(variance_estimator / len(mean_ith_batch))
+    print(
+        "Batch Overlapping Means method empirical mean",
+        grand_mean,
+        "+-",
+        ci_grand_mean,
+        "(with var",
+        variance_estimator,
+        ")"
+    )
+    # _, ax = plt.subplots(1, 2)
+    # ax[0][0].hist(mean_ith_batch)
+    # plt.show()
+    
+def main():
+    sim_time_len = 50_000
+    ro = 1 / 2  # lab/ mi
+    n_simulation = 5
+
+    test_overlapping_batch_means(1, 1/ro)
     ex1(ro, sim_time_len, n_simulation)
 
 
 if __name__ == "__main__":
     main()
+    
