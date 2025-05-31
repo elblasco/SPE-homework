@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from heapq import heappop, heappush
-from typing import Deque, Callable, Any, Self
+from typing import Deque, Callable, Self
 from collections import deque
 from enum import Enum
 import numpy as np
@@ -60,7 +60,7 @@ class QueueServer:
     def queue_peek(self) -> tuple[int, float, int]:
         return self.queue[0]
 
-    def simulate(self, collect_stats: Callable[[Self, float, EventType], Any]) -> list:
+    def simulate(self, collect_stats: Callable[[Self, float, EventType], any]) -> list:
         stats = []
 
         while not self.empty_events():
