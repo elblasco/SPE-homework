@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import numpy as np
 import matplotlib.pyplot as plt
 import math
@@ -211,33 +212,6 @@ def ex1(ro, sim_len, n_simulation):
     plt.show()
 
 
-def test_batch_means(lam: float, mi: float):
-    server: QueueServer = QueueServer(0, 100_000, lam, mi)
-    stats = server.simulate(lambda s, time, event: [(
-        s.curr_load() + (1 if event == EventType.ARRIVAL else 0) - (1 if event == EventType.DEPARTURE else 0),
-        time)])
-    n_packets, instants = map(lambda x: list(x), zip(*stats))
-    batch_num = len(n_packets)/100
-    splitted_n_packets = np.array_split(n_packets, batch_num)
-    mean_ith_batch = [np.average(batch) for batch in splitted_n_packets]
-    grand_mean = np.average(mean_ith_batch)
-    variance_estimator = 1/(batch_num - 1) * sum((mean_i - grand_mean) ** 2 for mean_i in mean_ith_batch)
-    eta = 1.96  # for confidence level 0.95
-    ci_grand_mean = eta * math.sqrt(variance_estimator / batch_num)
-    print(
-        "Batch Means method empirical mean",
-        grand_mean,
-        "+-",
-        ci_grand_mean,
-        "(with var",
-        variance_estimator,
-        ")"
-    )
-    _, ax = plt.subplots(1, 2)
-    ax[0][0].hist(mean_ith_batch)
-    plt.show()
-
-
 # batch_time_size < (end - start) 
 def time_based_overlapping_batch_mean(n_packets: list, instants: list, batch_time_size: int, batch_number: int, start: int, end: int) -> list:
     mean_ith_batch: list = []
@@ -299,7 +273,8 @@ def test_overlapping_batch_means(lam: float, mi: float, sim_time_len: float):
     ax[1][0].hist(mean_ith_batch, bins = 80)
     
     plt.show()
-    
+
+
 def main():
     sim_time_len = 50_000
     ro = 1 / 2  # lab/ mi
