@@ -145,7 +145,7 @@ def plot_distribution_packets(ax1, ax2, start, end, n_packets, instants):
     ax2.legend(loc="upper right")
 
 
-def ex1(lam, mi, sim_len, n_simulation):
+def ex1(lam, mi, sim_len, n_simulation, warmup_factor):
     start = 0
     end = sim_len
 
@@ -154,9 +154,11 @@ def ex1(lam, mi, sim_len, n_simulation):
     instant_avg: list = []
     n_packets: list = []
     instants: list = []
+
     ro = lam / mi
+    theoretical_mean_n_packets = 1  # ro / (1 - ro)
     # Enable warmup to discard first datapoints (by replacing 0)
-    warmup = 10 * math.ceil(ro / (1 - ro))
+    warmup = warmup_factor * math.ceil(theoretical_mean_n_packets)
 
     # Start simulation
     for sim in range(n_simulation):
@@ -196,8 +198,6 @@ def ex1(lam, mi, sim_len, n_simulation):
 
     ax[1][1].plot(instant_avg, avg_packet, label="Average Packet per instant")
 
-    ro = lam / mi
-    theoretical_mean_n_packets = ro / (1 - ro)
     grand_mean: float = float(np.average(mean_ith_simulation))
 
     varian = (
@@ -219,17 +219,17 @@ def ex1(lam, mi, sim_len, n_simulation):
         varian,
         ")",
     )
-    ax[1][1].plot(
-        instant_avg,
-        [theoretical_mean_n_packets for _ in avg_packet],
-        label="Theoretical mean of packets",
-    )
-    ax[1][1].plot(
-        instant_avg,
-        [grand_mean for _ in avg_packet],
-        label="Empirical mean of packets",
-    )
-    ax[1][1].legend(loc="upper right")
+    # ax[1][1].plot(
+    #     instant_avg,
+    #     [theoretical_mean_n_packets for _ in avg_packet],
+    #     label="Theoretical mean of packets",
+    # )
+    # ax[1][1].plot(
+    #     instant_avg,
+    #     [grand_mean for _ in avg_packet],
+    #     label="Empirical mean of packets",
+    # )
+    ax[1][1].legend(loc="lower right")
 
     plt.show()
 
@@ -339,14 +339,14 @@ def test_overlapping_batch_means(lam: float, mi: float, sim_time_len: int):
 
 def main():
     sim_time_len = 50_000
-    ro = 2 / 3  # lab/ mi
+    ro = 0.1  # lab/ mi
     n_simulation = 50
 
     lam = 1  # arrivals
     mi = lam / ro  # departures
 
-    test_overlapping_batch_means(lam, mi, sim_time_len * n_simulation)
-    ex1(lam, mi, sim_time_len, n_simulation)
+    # test_overlapping_batch_means(lam, mi, sim_time_len * n_simulation)
+    ex1(lam, mi, sim_time_len, n_simulation, 0)
 
 
 if __name__ == "__main__":

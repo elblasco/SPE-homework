@@ -140,7 +140,26 @@ To conclude, we expected to achieve better results using this method; however th
 %TODO Quote the usage of rho insert bottom left ex1 graph with rho = 2, 1, 0.90, 0.1
 We then analyzed the convergence of the system with different parameters \(\lambda\) and \(\mu\). To be exact we analyzed the system behavior for different value of \(\rho\) which is defined as the rate \(\frac \lambda \mu\). We expect value of \(\rho \ge 1\) to diverge, value closer to 1 to take accumulate larger queue with higher probability while value closer to 0 to tend to be have smaller queue and dispatch them quickly.
 
-% TODO 4 images (split in two line divergent and not)
+% TODO 4 images (make a grid 2x2)
+
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[width=0.45\linewidth]{img/pho2}
+	\label{fig:pho2}
+	~
+	\includegraphics[width=0.45\linewidth]{img/rho1}
+	\label{fig:rho1}
+
+	\includegraphics[width=0.45\linewidth]{img/rho0.99}
+	\label{fig:rho099}
+	~
+	\includegraphics[width=0.45\linewidth]{img/rho0.1}
+	\label{fig:rho010}
+
+	\caption{TODO} % TODO
+	\label{img:data-vis}
+\end{figure}
+
 
 As it is possible to see in the two rows: \ref{} and \ref, the value follow what we expected. In the first ones, the two graph show two simulation with  \(\rho \ge 1\), and as such diverging. The difference between the two is that while the first having a much more rapid rate of climb, almost constant; the other climb much slower. On the second row instead we see two cases with \(\rho \le 1\), in this case we see that the first example almost resemble the divergent case, creating large queue; instead the second has a much smaller \(\rho\) and as such most of packets are quickly dispatched and because of this the queue very often empty with at most a packet currently being processed.
 
@@ -153,7 +172,7 @@ As it is possible to see in the two rows: \ref{} and \ref, the value follow what
 % TODO Image
 To compute the variance of the mean two methods where employed: the naive method, which is the variance of all the measurements and the post-stratification, defining the stratum as the number of packet in queue in the system when the packet arrive.
 % TODO Pseudo code
-The results of this two methods when
+The results of this two methods when ...
 
 
 \end{document}
