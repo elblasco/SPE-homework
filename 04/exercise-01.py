@@ -240,8 +240,8 @@ def time_based_overlapping_batch_mean(
     old_n_packet = 0
 
     for batch in range(batch_number):
-        batch_start: int = start + (step_size * batch)
-        batch_end: int = batch_start + batch_time_size
+        batch_start: float = start + (step_size * batch)
+        batch_end: float = batch_start + batch_time_size
         while instants[window_start] < batch_start:
             old_n_packet = n_packets[window_start]
             window_start += 1
@@ -264,7 +264,7 @@ def time_based_overlapping_batch_mean(
     return mean_ith_batch
 
 
-def test_overlapping_batch_means(lam: float, mi: float, sim_time_len: float):
+def test_overlapping_batch_means(lam: float, mi: float, sim_time_len: int):
     simulation_end = sim_time_len
     simulation_start = 0
     server: QueueServer = QueueServer(simulation_start, simulation_end, lam, mi)
@@ -284,7 +284,7 @@ def test_overlapping_batch_means(lam: float, mi: float, sim_time_len: float):
         n_packets, instants, 1_000, 10_001, simulation_start, simulation_end
     )
 
-    grand_mean = np.average(mean_ith_batch)
+    grand_mean = float(np.average(mean_ith_batch))
     variance_estimator = (
             1
             / (len(mean_ith_batch) - 1)
