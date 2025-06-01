@@ -71,7 +71,7 @@ def unique_sum(totali_pacchetti, totali_pacchetti_durata, maxim):
 
 
 def mean_time_weighted(
-        n_packets: list, instants: list, start: float, end: float, initial_n_packet: int = 0
+    n_packets: list, instants: list, start: float, end: float, initial_n_packet: int = 0
 ):
     old_packet = initial_n_packet
     old_instant = start
@@ -141,11 +141,9 @@ def plot_distribution_packets(ax1, ax2, start, end, n_packets, instants):
     ax2.legend(loc="upper right")
 
 
-def ex1(ro, sim_len, n_simulation):
+def ex1(lam, mi, sim_len, n_simulation):
     start = 0
-    end = sim_len
-    lam = 1  # arrivals
-    mi = lam / ro  # departures
+    end = sim_len / 10
 
     mean_ith_simulation: list = []
     avg_packet: list = []
@@ -188,13 +186,14 @@ def ex1(ro, sim_len, n_simulation):
 
     ax[1][1].plot(instant_avg, avg_packet, label="Average Packet per instant")
 
+    ro = lam / mi
     theoretical_mean_n_packets = ro / (1 - ro)
     grand_mean: float = float(np.average(mean_ith_simulation))
 
     varian = (
-            1
-            / (n_simulation - 1)
-            * sum((mean_i - grand_mean) ** 2 for mean_i in mean_ith_simulation)
+        1
+        / (n_simulation - 1)
+        * sum((mean_i - grand_mean) ** 2 for mean_i in mean_ith_simulation)
     )
     eta = 1.96  # for confidence level 0.95
     ci_grand_mean = eta * math.sqrt(varian / n_simulation)
@@ -227,12 +226,12 @@ def ex1(ro, sim_len, n_simulation):
 
 # batch_time_size < (end - start)
 def time_based_overlapping_batch_mean(
-        n_packets: list,
-        instants: list,
-        batch_time_size: int,
-        batch_number: int,
-        start: int,
-        end: int,
+    n_packets: list,
+    instants: list,
+    batch_time_size: int,
+    batch_number: int,
+    start: int,
+    end: int,
 ) -> list:
     mean_ith_batch: list = []
     step_size = (end - start - batch_time_size) / (batch_number - 1)
@@ -286,9 +285,9 @@ def test_overlapping_batch_means(lam: float, mi: float, sim_time_len: int):
 
     grand_mean = float(np.average(mean_ith_batch))
     variance_estimator = (
-            1
-            / (len(mean_ith_batch) - 1)
-            * sum((mean_i - grand_mean) ** 2 for mean_i in mean_ith_batch)
+        1
+        / (len(mean_ith_batch) - 1)
+        * sum((mean_i - grand_mean) ** 2 for mean_i in mean_ith_batch)
     )
     eta = 1.96  # for confidence level 0.95
     ci_grand_mean = eta * math.sqrt(variance_estimator / len(mean_ith_batch))
@@ -322,11 +321,14 @@ def test_overlapping_batch_means(lam: float, mi: float, sim_time_len: int):
 
 def main():
     sim_time_len = 50_000
-    ro = 1 / 2  # lab/ mi
+    ro = 1 / 10  # lab/ mi
     n_simulation = 10
 
-    test_overlapping_batch_means(1, 1 / ro, sim_time_len * n_simulation)
-    ex1(ro, sim_time_len, n_simulation)
+    lam = 1  # arrivals
+    mi = lam / ro  # departures
+
+    test_overlapping_batch_means(lam, mi, sim_time_len * n_simulation)
+    ex1(lam, mi, sim_time_len, n_simulation)
 
 
 if __name__ == "__main__":
