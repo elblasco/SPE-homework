@@ -63,12 +63,14 @@ def ex2(ro, sim_len, n_simulation):
         )
     )
 
-    post_stratified_avg: float = float(np.average(
-        post_stratified_mean, weights=post_stratified_pi
-    ))
-    post_stratified_var: float = float(np.average(
-        post_stratified_var, weights=list(map(lambda x: x * x, post_stratified_pi))
-    ))
+    post_stratified_avg: float = float(
+        np.average(post_stratified_mean, weights=post_stratified_pi)
+    )
+    post_stratified_var: float = float(
+        np.average(
+            post_stratified_var, weights=list(map(lambda x: x * x, post_stratified_pi))
+        )
+    )
 
     post_stratified_interval = eta * math.sqrt(
         post_stratified_var / len(full_departure_elapsed)

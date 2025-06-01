@@ -48,7 +48,9 @@ def get_line(xs: list[float], ys: list[float]):
     line = np.polyfit(xs, ys, 1, w=weights)
 
     # residual sum of squares
-    ss_res: float = np.sum([(ys[i] - (xs[i] * line[0] + line[1])) ** 2 for i in range(lenght)])
+    ss_res: float = np.sum(
+        [(ys[i] - (xs[i] * line[0] + line[1])) ** 2 for i in range(lenght)]
+    )
 
     # total sum of squares
     ss_tmp_mean: float = float(np.average(ys))
@@ -68,7 +70,9 @@ def unique_sum(totali_pacchetti, totali_pacchetti_durata, maxim):
     return range(maxim + 1), ret
 
 
-def mean_time_weighted(n_packets: list, instants: list, start: float, end: float, initial_n_packet: int = 0):
+def mean_time_weighted(
+        n_packets: list, instants: list, start: float, end: float, initial_n_packet: int = 0
+):
     old_packet = initial_n_packet
     old_instant = start
     empirical_sum_n_packets = 0
@@ -78,23 +82,21 @@ def mean_time_weighted(n_packets: list, instants: list, start: float, end: float
         old_instant = instant
         old_packet = packet
 
-
     empirical_sum_n_packets += old_packet * (end - old_instant)
-    
+
     return empirical_sum_n_packets / (end - start)
+
 
 def plot_distribution_packets(ax1, ax2, start, end, n_packets, instants):
     totali_pacchetti = [0] + n_packets
 
     bin_max = max(totali_pacchetti)
-    
+
     instants_mod = [start] + instants + [end]
 
     totali_pacchetti_durata = [
-        instants_mod[i] - instants_mod[i - 1]
-        for i in range(1, len(instants_mod))
+        instants_mod[i] - instants_mod[i - 1] for i in range(1, len(instants_mod))
     ]
-
 
     n_packet_in_queue, n_packet_in_queue_occur = unique_sum(
         totali_pacchetti, totali_pacchetti_durata, bin_max
@@ -104,7 +106,7 @@ def plot_distribution_packets(ax1, ax2, start, end, n_packets, instants):
     empirical_log_line = get_line(list(n_packet_in_queue), empirical_log_n_packets)
 
     linspace_n_packet_in_queue = np.linspace(0, bin_max, 100)
-    
+
     ax1.fill_between(
         n_packet_in_queue, n_packet_in_queue_occur, alpha=0.2, color="orange"
     )
@@ -144,7 +146,7 @@ def ex1(ro, sim_len, n_simulation):
     end = sim_len
     lam = 1  # arrivals
     mi = lam / ro  # departures
-    
+
     mean_ith_simulation: list = []
     avg_packet: list = []
     instant_avg: list = []
@@ -155,9 +157,16 @@ def ex1(ro, sim_len, n_simulation):
     for sim in range(n_simulation):
         print(f"Start simulation {sim}")
         server: QueueServer = QueueServer(start, end, lam, mi)
-        stats = server.simulate(lambda s, time, event: [(
-            s.curr_load() + (1 if event == EventType.ARRIVAL else 0) - (1 if event == EventType.DEPARTURE else 0),
-            time)])
+        stats = server.simulate(
+            lambda s, time, event: [
+                (
+                    s.curr_load()
+                    + (1 if event == EventType.ARRIVAL else 0)
+                    - (1 if event == EventType.DEPARTURE else 0),
+                    time,
+                )
+            ]
+        )
         n_packets, instants = map(lambda x: list(x), zip(*stats))
 
         mean_i = mean_time_weighted(n_packets, instants, start, end)
@@ -173,7 +182,7 @@ def ex1(ro, sim_len, n_simulation):
     _, ax = plt.subplots(2, 2)
 
     plot_distribution_packets(ax[0][0], ax[0][1], start, end, n_packets, instants)
-    
+
     ax[1][0].plot(instants, n_packets, label="Packets [y] for each instant [x]")
     ax[1][0].legend(loc="upper right")
 
@@ -182,7 +191,11 @@ def ex1(ro, sim_len, n_simulation):
     theoretical_mean_n_packets = ro / (1 - ro)
     grand_mean: float = float(np.average(mean_ith_simulation))
 
-    varian = 1 / (n_simulation - 1) * sum((mean_i - grand_mean) ** 2 for mean_i in mean_ith_simulation)
+    varian = (
+            1
+            / (n_simulation - 1)
+            * sum((mean_i - grand_mean) ** 2 for mean_i in mean_ith_simulation)
+    )
     eta = 1.96  # for confidence level 0.95
     ci_grand_mean = eta * math.sqrt(varian / n_simulation)
 
@@ -195,7 +208,7 @@ def ex1(ro, sim_len, n_simulation):
         ci_grand_mean,
         "(with var",
         varian,
-        ")"
+        ")",
     )
     ax[1][1].plot(
         instant_avg,
@@ -212,13 +225,20 @@ def ex1(ro, sim_len, n_simulation):
     plt.show()
 
 
-# batch_time_size < (end - start) 
-def time_based_overlapping_batch_mean(n_packets: list, instants: list, batch_time_size: int, batch_number: int, start: int, end: int) -> list:
+# batch_time_size < (end - start)
+def time_based_overlapping_batch_mean(
+        n_packets: list,
+        instants: list,
+        batch_time_size: int,
+        batch_number: int,
+        start: int,
+        end: int,
+) -> list:
     mean_ith_batch: list = []
     step_size = (end - start - batch_time_size) / (batch_number - 1)
     window_start = window_end = 0
     old_n_packet = 0
-    
+
     for batch in range(batch_number):
         batch_start: int = start + (step_size * batch)
         batch_end: int = batch_start + batch_time_size
@@ -230,30 +250,53 @@ def time_based_overlapping_batch_mean(n_packets: list, instants: list, batch_tim
 
         while instants[window_end] < batch_end:
             window_end += 1
-        
-        mean_ith_batch.append(mean_time_weighted(n_packets[window_start:window_end], instants[window_start:window_end], batch_start, batch_end, initial_n_packet = old_n_packet))
-        
+
+        mean_ith_batch.append(
+            mean_time_weighted(
+                n_packets[window_start:window_end],
+                instants[window_start:window_end],
+                batch_start,
+                batch_end,
+                initial_n_packet=old_n_packet,
+            )
+        )
+
     return mean_ith_batch
 
-    
+
 def test_overlapping_batch_means(lam: float, mi: float, sim_time_len: float):
     simulation_end = sim_time_len
     simulation_start = 0
     server: QueueServer = QueueServer(simulation_start, simulation_end, lam, mi)
-    packets_and_instants = server.simulate(lambda s, time, event: [(
-        s.curr_load() + (1 if event == EventType.ARRIVAL else 0) - (1 if event == EventType.DEPARTURE else 0),
-        time)])
+    packets_and_instants = server.simulate(
+        lambda s, time, event: [
+            (
+                s.curr_load()
+                + (1 if event == EventType.ARRIVAL else 0)
+                - (1 if event == EventType.DEPARTURE else 0),
+                time,
+            )
+        ]
+    )
     n_packets, instants = map(lambda x: list(x), zip(*packets_and_instants))
 
-    mean_ith_batch = time_based_overlapping_batch_mean(n_packets, instants, 1_000, 10_001, simulation_start, simulation_end)
-    
+    mean_ith_batch = time_based_overlapping_batch_mean(
+        n_packets, instants, 1_000, 10_001, simulation_start, simulation_end
+    )
+
     grand_mean = np.average(mean_ith_batch)
-    variance_estimator = 1/(len(mean_ith_batch) - 1) * sum((mean_i - grand_mean) ** 2 for mean_i in mean_ith_batch)
+    variance_estimator = (
+            1
+            / (len(mean_ith_batch) - 1)
+            * sum((mean_i - grand_mean) ** 2 for mean_i in mean_ith_batch)
+    )
     eta = 1.96  # for confidence level 0.95
     ci_grand_mean = eta * math.sqrt(variance_estimator / len(mean_ith_batch))
 
-    expected_grand_mean = mean_time_weighted(n_packets, instants, simulation_start, simulation_end)
-    
+    expected_grand_mean = mean_time_weighted(
+        n_packets, instants, simulation_start, simulation_end
+    )
+
     print(
         "Batch Overlapping Means method, expected mean",
         expected_grand_mean,
@@ -263,15 +306,17 @@ def test_overlapping_batch_means(lam: float, mi: float, sim_time_len: float):
         ci_grand_mean,
         "(with var",
         variance_estimator,
-        ")"
+        ")",
     )
-    
+
     _, ax = plt.subplots(2, 2)
 
-    plot_distribution_packets(ax[0][0], ax[0][1], simulation_start, simulation_end, n_packets, instants)
+    plot_distribution_packets(
+        ax[0][0], ax[0][1], simulation_start, simulation_end, n_packets, instants
+    )
 
-    ax[1][0].hist(mean_ith_batch, bins = 80)
-    
+    ax[1][0].hist(mean_ith_batch, bins=80)
+
     plt.show()
 
 
@@ -280,10 +325,9 @@ def main():
     ro = 1 / 2  # lab/ mi
     n_simulation = 10
 
-    test_overlapping_batch_means(1, 1/ro, sim_time_len * n_simulation)
+    test_overlapping_batch_means(1, 1 / ro, sim_time_len * n_simulation)
     ex1(ro, sim_time_len, n_simulation)
 
 
 if __name__ == "__main__":
     main()
-    

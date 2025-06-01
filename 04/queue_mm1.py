@@ -15,7 +15,9 @@ class EventType(Enum):
 
 class QueueServer:
     def __init__(self, start_time, end_time, lamb, mi):
-        self.queue: Deque[(int, float, int)] = deque()  # arr[0] contains the pactet in processor
+        self.queue: Deque[(int, float, int)] = (
+            deque()
+        )  # arr[0] contains the pactet in processor
         self.next_id = 0
         self.lamb = lamb
         self.mi = mi
