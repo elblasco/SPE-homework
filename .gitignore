@@ -3,6 +3,13 @@ auto/
 .venv/
 .fleet/
 
+# Latex temp files
+*.aux
+*.bcf
+*.out
+*.run.xml
+*.synctex.gz
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
