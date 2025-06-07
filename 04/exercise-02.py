@@ -17,10 +17,10 @@ def post_stratify_departure(
     return_mean: list = []
     return_var: list = []
     return_pi: list = []
-    for i in range(lenght):
-        return_mean.append(np.average(stratified[i]))
-        return_var.append(np.var(stratified[i]))
-        return_pi.append(len(stratified[i]) / len(dep_queue_waiting))
+    for stratum in stratified:
+        return_mean.append(np.average(stratum))
+        return_var.append(np.var(stratum))
+        return_pi.append(len(stratum) / len(dep_queue_waiting))
         # return_pi.append((1 - ro) * ro**i)
 
     return return_mean, return_var, return_pi
@@ -65,9 +65,8 @@ def ex2(ro, sim_len, n_simulation, do_plot) -> tuple[float, float, float, float]
         np.average(post_stratified_mean, weights=post_stratified_pi)
     )
     post_stratified_var: float = float(
-        np.average(
-            post_stratified_var, weights=list(map(lambda x: x * x, post_stratified_pi))
-        )
+        np.average(post_stratified_var, weights=post_stratified_pi)
+        / len(post_stratified_pi)
     )
 
     if do_plot:
@@ -77,27 +76,30 @@ def ex2(ro, sim_len, n_simulation, do_plot) -> tuple[float, float, float, float]
             + f"post stratified {post_stratified_avg} with var {post_stratified_var}"
         )
 
-        _, ax = plt.subplots(1, 3)
+        _, ax = plt.subplots(2, 2)
 
-        ax[0].hist(
+        ax[0][0].hist(
             full_departure_elapsed,
-            label=f"Departure time over {n_simulation} simuls",
+            label=f"Departure time",
             density=True,
             bins=50,
         )
-        ax[1].hist(
+        ax[0][1].hist(
             full_departure_queue_waiting,
-            label=f"Waiting time in {n_simulation} simuls",
+            label=f"Waiting in queue when packet arrive",
             density=True,
+            bins=10,
         )
-        ax[2].plot(post_stratified_pi, label="Probabilities obtained with post-strat")
-        ax[2].plot(
+        ax[1][0].plot(
+            post_stratified_pi, label="Probabilities obtained with post-strat"
+        )
+        ax[1][0].plot(
             [(1 - ro) * ro**i for i in range(len(post_stratified_pi))],
             label="Theoretical probabilities",
         )
-        ax[0].legend(loc="upper right")
-        ax[1].legend(loc="upper right")
-        ax[2].legend(loc="upper right")
+        ax[0][0].legend(loc="upper right")
+        ax[0][1].legend(loc="upper right")
+        ax[1][0].legend(loc="upper right")
         plt.show()
 
     return (
@@ -117,7 +119,7 @@ def main():
     mi = lam / ro  # departures
     expected = 1 / (mi - lam)
 
-    redo_n = 30
+    redo_n = 300
 
     diff_i = []
     naive_var_tot = []
@@ -153,23 +155,24 @@ def main():
         diff_interval,
     )
 
-    _, ax = plt.subplots(1, 1)
+    _, ax = plt.subplots(2, 1)
 
-    ax.plot(diff_i, label="Differences (post stratification var - naive var)")
-    ax.plot(
+    ax[0].plot(diff_i, label="Differences (post stratification var - naive var)")
+    ax[0].plot(
         [diff_avg for i in range(len(diff_i))],
         label="Differences' mean",
     )
-    ax.plot(
+    ax[0].plot(
         [diff_avg - diff_interval for i in range(len(diff_i))],
         label="Lower Bound CI Mean",
     )
-    ax.plot(
+    ax[0].plot(
         [diff_avg + diff_interval for i in range(len(diff_i))],
         label="Upper Bound CI Mean",
     )
+    ax[1].hist(diff_i)
 
-    ax.legend(loc="lower right")
+    ax[1].legend(loc="lower right")
     plt.show()
 
     print("\nFinal graph")
