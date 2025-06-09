@@ -17,8 +17,8 @@
 \usepackage{amsmath} \allowdisplaybreaks% lets align equations break over pages.
 \usepackage{amssymb}
 \usepackage{caption}
-\usepackage{svg}
 \usepackage{cleveref}
+\usepackage{subcaption}
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
@@ -91,18 +91,18 @@ From this we could easily construct, by elevating to the power of \(e\) the line
 
 \subsection*{Independent Replication}
 
-We started using ``Independent Replication'' as method to gather information about the number of packets in the queue given a time instant. This method has many advantages, especially for finite state simulations, but can be used as well for steady state analysis; although you have to take into consideration some possible issues such as initialization problem, introducing periodicity and some others. As such we used this method for qualitative analysis and to compare the other methods used.
+We started using ``Independent Replication'' as method to gather information about the number of packets in the queue given a time instant. This method has many advantages, especially for finite state simulations, but can be used as well for steady state analysis; although you have to take into consideration some possible issues such as initialisation problem, introducing periodicity and some others. As such we used this method for qualitative analysis and to compare the other methods used.
 
 \begin{center}
 	\includegraphics[width=0.7\textwidth]{independent-replication-with-bias.png}
-	\captionof{figure}{Independent replication with initialization bias, \(\lambda = 1\) and \(\mu = 1.5\)}
+	\captionof{figure}{Independent replication with initialisation bias, \(\lambda = 1\) and \(\mu = 1.5\)}
 	\label{fig:independent-replication-with-bias}
 \end{center}
 
-We started using ``Independent Replication'' as method to gather information about the number of packets in the queue given a time instant. This method has many advantages, especially for finite state simulations, but can be used as well for steady state analysis; although you have to take into consideration some possible issues such as initialization problem, introducing periodicity and some others. As such we used this method for qualitative analysis and to compare the other methods used.
+We started using ``Independent Replication'' as method to gather information about the number of packets in the queue given a time instant. This method has many advantages, especially for finite state simulations, but can be used as well for steady state analysis; although you have to take into consideration some possible issues such as initialisation problem, introducing periodicity and some others. As such we used this method for qualitative analysis and to compare the other methods used.
 
 
-Using ``Independent Replication'' we had to take into consideration the initialization bias that is clearly visible in the left hand-side of~\Cref{fig:independent-replication-with-bias}. This bias is caused by all simulations starting with an empty queue, i.e. 0 packets, at the same time namely instant 0. To overcome this problem there are many solutions:
+Using ``Independent Replication'' we had to take into consideration the initialisation bias that is clearly visible in the left hand-side of~\Cref{fig:independent-replication-with-bias}. This bias is caused by all simulations starting with an empty queue, i.e. 0 packets, at the same time namely instant 0. To overcome this problem there are many solutions:
 \begin{itemize}
 \item Starting the simulation at a different initial time, starting gathering data after all the simulation have started;
 \item Running the simulation for a longer period of time;
@@ -113,11 +113,11 @@ We chose the latter method by discarding the first \emph{n} time instants from e
 
 \begin{center}
   \includegraphics[width=0.7\textwidth]{independent-replication-without-bias.png}
-  \captionof{figure}{Independent replication without initialization bias, \(\lambda = 1\) and \(\mu = 1.5\)}
+  \captionof{figure}{Independent replication without initialisation bias, \(\lambda = 1\) and \(\mu = 1.5\)}
   \label{fig:independent-replication-without-bias}
 \end{center}
 
-Discarding the first \emph{n} time instant we passed from an average of \(2.007 \pm 0.0438\)(\Cref{fig:independent-replication-with-bias}) to an average of \(2.002 \pm 0.0405\)(\Cref{fig:independent-replication-without-bias}), with a theoretical value of 2. While the graph in~\Cref{fig:independent-replication-without-bias} is more representative of the real average over time of a stationary conditions, the obtained average and relative CI do not get much better since the length of the simulation, already partially overwhelm the initialization bias.
+Discarding the first \emph{n} time instant we passed from an average of \(2.007 \pm 0.0438\)(\Cref{fig:independent-replication-with-bias}) to an average of \(2.002 \pm 0.0405\)(\Cref{fig:independent-replication-without-bias}), with a theoretical value of 2. While the graph in~\Cref{fig:independent-replication-without-bias} is more representative of the real average over time of a stationary conditions, the obtained average and relative CI do not get much better since the length of the simulation, already partially overwhelm the initialisation bias.
 
 \subsection*{Overlapping Batch Means}
 
@@ -138,41 +138,99 @@ To conclude, we expected to achieve better results using this method; however th
 \subsection*{Varying parameters}
 
 %TODO Quote the usage of rho insert bottom left ex1 graph with rho = 2, 1, 0.90, 0.1
-We then analyzed the convergence of the system with different parameters \(\lambda\) and \(\mu\). To be exact we analyzed the system behavior for different value of \(\rho\) which is defined as the rate \(\frac \lambda \mu\). We expect value of \(\rho \ge 1\) to diverge, value closer to 1 to take accumulate larger queue with higher probability while value closer to 0 to tend to be have smaller queue and dispatch them quickly.
+We analysed the convergence of the system with different values of \(\rho\), which is defined as \(\frac \lambda \mu\). We expect that for \(\rho \ge 1\) the data would have been divergent, value closer to 1 to take accumulate larger queue with higher probability while value closer to 0 to tend to be have smaller queue and dispatch them quickly.
 
-% TODO 4 images (make a grid 2x2)
-
-\begin{figure}[ht!]
-	\centering
-	\includegraphics[width=0.45\linewidth]{img/pho2}
-	\label{fig:pho2}
-	~
-	\includegraphics[width=0.45\linewidth]{img/rho1}
+\begin{figure}[h]
+  \begin{subfigure}[t]{.45\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{img/pho2}
+    \caption{\(\rho = 2\)}
+    \label{fig:rho2}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{.45\textwidth}
+    \centering
+	\includegraphics[width=\linewidth]{img/rho1}
+    \caption{\(\rho = 1\)}
 	\label{fig:rho1}
-
-	\includegraphics[width=0.45\linewidth]{img/rho0.99}
+  \end{subfigure}
+  \medskip
+  \begin{subfigure}[t]{.45\textwidth}
+    \centering
+	\includegraphics[width=\linewidth]{img/rho0.99}
+    \caption{\(\rho = 0.99\)}
 	\label{fig:rho099}
-	~
-	\includegraphics[width=0.45\linewidth]{img/rho0.1}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{.45\textwidth}
+    \centering
+	\includegraphics[width=\linewidth]{img/rho0.1}
+    \caption{\(\rho = 0.1\)}
 	\label{fig:rho010}
-
-	\caption{TODO} % TODO
-	\label{img:data-vis}
+  \end{subfigure}
+  \caption{Packets per instants with different \(\rho\)}
 \end{figure}
+  
 
-
-As it is possible to see in the two rows: \ref{} and \ref, the value follow what we expected. In the first ones, the two graph show two simulation with  \(\rho \ge 1\), and as such diverging. The difference between the two is that while the first having a much more rapid rate of climb, almost constant; the other climb much slower. On the second row instead we see two cases with \(\rho \le 1\), in this case we see that the first example almost resemble the divergent case, creating large queue; instead the second has a much smaller \(\rho\) and as such most of packets are quickly dispatched and because of this the queue very often empty with at most a packet currently being processed.
-
-
+In \Cref{fig:rho2,fig:rho1} the main difference between the two is that while the first graph has a faster and more constant rate of climb; the other climbs slower and more irregularly. In \Cref{fig:rho099,fig:rho010}  we see that the first example almost resemble the divergent case, creating large queue. Instead the second, having a much smaller \(\rho\), can dispatch the packets blazingly fast, emptying the queue very often.
 
 \section*{Exercise 2}
 
-% TODO quote method chosen, pseudo-codes, naïf values and refined values, and observation about data semantics and non-naïf is better
+% TODO quote method chosen, pseudo-codes, naïf values and refined values, and observations about data semantics and why non-naïf is better
 % TODO Intro
 % TODO Image
-To compute the variance of the mean two methods where employed: the naive method, which is the variance of all the measurements and the post-stratification, defining the stratum as the number of packet in queue in the system when the packet arrive.
-% TODO Pseudo code
-The results of this two methods when ...
+For this exercises we used \(\rho = \frac{2}{7}\) so that the the theoretical average traversal time for any packet is 0.4.
 
+To compute the variance of the mean two methods where employed:
+\begin{itemize}
+\item A naive method, the variance of all the measurements;
+\item ``Post-stratification'', defining a stratum as the number of packets in the queue in when another packet arrives.
+\end{itemize}
+
+\subsection*{Pseudo-Code}
+
+\begin{lstlisting}[language=python,caption={Post-stratification pseudo-code},captionpos=b,label={lst:post-stratififcation}]
+lenght = max(dep_queue_waiting) + 1
+stratified = [[] for _ in range(lenght)]
+
+for inqueue, elapsed in zip(dep_queue_waiting, dep_elapsed):
+    stratified[inqueue].append(elapsed)
+
+strati_mean = []
+strati_var = []
+strati_pi = []
+for stratum in stratified:
+    strati_mean.append(np.average(stratum))
+    strati_var.append(stratum))
+    strati_pi.append(len(stratum) / len(dep_queue_waiting))
+
+post_stratified_avg = 
+    np.average(strati_mean, weights=strati_pi)
+
+post_stratified_var =
+    np.average(strati_var, weights=strati_pi) / len(stratified)
+\end{lstlisting}
+
+In \Cref{lst:post-stratififcation} we only describe ``Post-stratification'' since the naive code is trivial.
+
+\subsection*{Analysis}
+
+To compare the alternatives, we used ``Comparison of alternatives''. In this simulation  data are correlation, therefore we used ``Correlated case''. For each simulation we computed:
+
+\begin{equation*}
+  \mathit{d}_i = \mathit{post\ stratum\ var}_i - \mathit{naif\ var}_i
+\end{equation*}
+
+We then computed the average of the differences, its variance and CI. In \Cref{fig:post-stratification} are shown the difference (blue), average (orange), and lower/upper bounds (green and red respectively).
+
+\begin{center}
+  \includegraphics[width=0.8\textwidth]{post-stratification.png}
+  \captionof{figure}{Difference of the two methods, \(\rho = \frac{2}{7}\)}
+  \label{fig:post-stratification}
+\end{center}
+
+In \Cref{fig:post-stratification} it is possible to see all the values, and 95\% Confidence level of the mean are negative. As such we can conclude with such confidence level that the second method (``Post-stratification'') has a lower variance that the naive method.
+
+In particular the average of the variance of the second method is 10 times lower than the average of the first method.
 
 \end{document}
