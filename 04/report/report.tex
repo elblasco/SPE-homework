@@ -80,11 +80,11 @@ We can start by showing how a simulation evolves over time with particular focus
 \end{center}
 
 % TODO put exponential and log graph about the quantity of packets over time
-We started y executing the simulation and plotting the distribution of time in which the simulation had a number of packet, given by summing the queues elements plus the packet that is being processed, if present. By doing so we found out as expected that such distribution is also an exponential. We can be sure of this by plotting with logarithm scale, compute the line that best fit the new data and compute the fit of such a line. The resulting line is in the case of image \ref{} is \(-0.385 \cdot x +  9.710\). This line is a good fit for our distribution as the \(R^2\) test of fitness of a line return a value of 0.992 (where 1 is a perfect fit).
-From this we could easily construct, by elevating to the power of \(e\) the line function, the best fit exponential.
+We started by plotting the distribution of number of packets for each time instant. This distribution is given by summing the enqueued packets plus one if a packet is being processed. We found out, as expected, that such distribution is exponential. We can be sure of this by plotting it with logarithm scale, compute the line that best fit the new data and compute the fit of such a line. The resulting line is in the case \Cref{fig:time-with-fixed-packet-n} is \(-0.385 \cdot x +  9.710\). This line is a good fit for our distribution, since the \(R^2\) test of fitness for our line returns 0.992 (where 1 is a perfect fit).
+From this we could easily construct, by elevating the line function to the power of \(e\), the best exponential fit.
 \begin{center}
 	\includegraphics[width=\textwidth]{img/time-with-fixed-packet-n.png}
-	\captionof{figure}{Total length of time in which \(x\) packets are in queue or in processing with \(\lambda = 1\) and \(\mu = 1.5\)}
+	\captionof{figure}{Distribution of packets per time instant, \(\lambda = 1\) and \(\mu = 1.5\)}
 	\label{fig:time-with-fixed-packet-n}
 \end{center}
 
