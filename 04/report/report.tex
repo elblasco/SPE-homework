@@ -91,8 +91,6 @@ From this we could easily construct, by elevating the line function to the power
 
 \subsection*{Independent Replication}
 
-We started using ``Independent Replication'' as method to gather information about the number of packets in the queue given a time instant. This method has many advantages, especially for finite state simulations, but can be used as well for steady state analysis; although you have to take into consideration some possible issues such as initialisation problem, introducing periodicity and some others. As such we used this method for qualitative analysis and to compare the other methods used.
-
 \begin{center}
 	\includegraphics[width=0.7\textwidth]{independent-replication-with-bias.png}
 	\captionof{figure}{Independent replication with initialisation bias, \(\lambda = 1\) and \(\mu = 1.5\)}
@@ -129,7 +127,7 @@ To use this method we must have:
 \item IID data.
 \end{itemize}
 
-The second condition is easily verified since every time interval is generated independently and with the same parameters. For the former condition is verified if the batch is large enough. To satisfy both conditions we picked as batch size \(\mathit{simulation~length} / 1000\) and as number of batch \(10000\) so that they are also overlapping for sure.
+The second condition is easily verified since every time interval is generated independently and with the same parameters. To satisfy both conditions we picked as batch size \(\mathit{simulation~length} / 1000\) and as number of batch \(10000\) so that they are also overlapping for sure.
 
 Given the theoretical mean is still 2, since we used the same parameters. Some of the empirical means obtained are \( 1.987 \pm 0.0058\), \(2.006 \pm 0.0059\), \(2.010 \pm 0.0062\) and \(1.997 \pm 0.0058\). The CIs obtained are strongly under-estimate for the confidence level of 95\%, to reach the confidence level the obtained CIs should be doubled in size. This problem is due to the fact that this method tends to under-estimate the variance and the fact that probably we are not completely fulfilling the prerequisites of this method.
 
@@ -172,7 +170,7 @@ We analysed the convergence of the system with different values of \(\rho\), whi
 \end{figure}
   
 
-In \Cref{fig:rho2,fig:rho1} the main difference between the two is that while the first graph has a faster and more constant rate of climb; the other climbs slower and more irregularly. In \Cref{fig:rho099,fig:rho010}  we see that the first example almost resemble the divergent case, creating large queue. Instead the second, having a much smaller \(\rho\), can dispatch the packets blazingly fast, emptying the queue very often.
+In \Cref{fig:rho2,fig:rho1} the main difference between the two is that while the first graph has a faster and a lesser irregular rate of climb; the other climbs slower and more irregularly. In \Cref{fig:rho099,fig:rho010}  we see that the first example almost resemble the divergent case, creating large queue. Instead the second, having a much smaller \(\rho\), can dispatch the packets blazingly fast, emptying the queue very often.
 
 \section*{Exercise 2}
 
@@ -215,7 +213,7 @@ In \Cref{lst:post-stratififcation} we only describe ``Post-stratification'' sinc
 
 \subsection*{Analysis}
 
-To compare the alternatives, we used ``Comparison of alternatives''. In this simulation  data are correlation, therefore we used ``Correlated case''. For each simulation we computed:
+To compare the alternatives, we used ``Comparison of alternatives''. In this simulation  data are correlated,therefore we used ``Correlated case''. For each simulation we computed:
 
 \begin{equation*}
   \mathit{d}_i = \mathit{post\ stratum\ var}_i - \mathit{naif\ var}_i
