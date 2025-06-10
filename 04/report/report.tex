@@ -127,7 +127,7 @@ To use this method we must have:
 \item IID data.
 \end{itemize}
 
-The second condition is easily verified since every time interval is generated independently and with the same parameters. For the former condition is verified if the batch is large enough. To satisfy both conditions we picked as batch size \(\mathit{simulation~length} / 1000\) and as number of batch \(10000\) so that they are also overlapping for sure.
+The second condition is easily verified since every time interval is generated independently and with the same parameters. To satisfy both conditions we picked as batch size \(\mathit{simulation~length} / 1000\) and as number of batch \(10000\) so that they are also overlapping for sure.
 
 Given the theoretical mean is still 2, since we used the same parameters. Some of the empirical means obtained are \( 1.987 \pm 0.0058\), \(2.006 \pm 0.0059\), \(2.010 \pm 0.0062\) and \(1.997 \pm 0.0058\). The CIs obtained are strongly under-estimate for the confidence level of 95\%, to reach the confidence level the obtained CIs should be doubled in size. This problem is due to the fact that this method tends to under-estimate the variance and the fact that probably we are not completely fulfilling the prerequisites of this method.
 
