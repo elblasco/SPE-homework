@@ -28,10 +28,10 @@ impl Simulation {
         let exited_station_id = train.get_curr_station();
         let (entering_station_id, _) = train.get_next_station();
 
+        train.go_next_stop();
+
         let curr_station = self.sys.stations.get_mut(&entering_station_id)?;
         curr_station.train_enter();
-
-        train.go_next_stop();
 
         let edge = self
             .sys
