@@ -1,6 +1,8 @@
-use crate::train_lines::{Direction, StationId, TrainLine};
+use crate::train_lines::train_line::{Direction, TrainLine};
+use crate::train_lines::StationId;
 use std::rc::Rc;
 
+#[derive(Debug)]
 pub struct Train {
     n_passenger: usize,
     max_passenger: usize,
@@ -11,17 +13,22 @@ pub struct Train {
     // status: Status,
 }
 
-impl Train {}
-
 impl Train {
-    pub const fn new(line: Rc<TrainLine>, max_passenger: usize) -> Self {
-        Self {
+    pub fn new(
+        line: Rc<TrainLine>,
+        max_passenger: usize,
+        pos_in_line: usize,
+        direction: Direction,
+    ) -> Option<Self> {
+        line.get(pos_in_line)?;
+
+        Some(Self {
             n_passenger: 0,
             max_passenger,
             line,
-            pos_in_line: 0usize,         // TODO
-            direction: Direction::Right, // TODO
-        }
+            pos_in_line, // TODO
+            direction,   // TODO
+        })
     }
 
     pub fn get_curr_station(&self) -> StationId {

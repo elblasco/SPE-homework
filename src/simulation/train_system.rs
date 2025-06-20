@@ -1,35 +1,26 @@
-use crate::train_lines::{Edge, Station, StationId, Train, TrainId, TrainLine};
+use crate::graph::node::Station;
+use crate::simulation::Simulation;
+use crate::train_lines::train::Train;
+use crate::train_lines::train_line::{Direction, TrainLine};
+use crate::train_lines::TrainId;
 use itertools::Itertools;
-use petgraph::graphmap::DiGraphMap;
-use std::collections::HashMap;
 use std::rc::Rc;
 
-pub struct TrainSystem {
-    pub graph: DiGraphMap<StationId, Edge>,
-    pub lines: Vec<Rc<TrainLine>>,
-    pub stations: HashMap<StationId, Station>,
-    pub trains: HashMap<TrainId, Train>,
-    next_train_id: TrainId,
-}
-
-impl TrainSystem {
-    pub fn new() -> Self {
-        Self {
-            graph: DiGraphMap::new(),
-            lines: vec![],
-            stations: HashMap::new(),
-            trains: HashMap::new(),
-            next_train_id: 0,
-        }
-    }
-
+impl Simulation {
     pub fn add_line(&mut self, line: TrainLine) -> Rc<TrainLine> {
         // TODO remove and use map instead
-        for (a, b) in line.iter().tuples() {
-            self.graph.add_edge(*a, *b, Edge::new());
-            self.graph.add_edge(*a, *b, Edge::new());
-            self.stations.insert(*a, Station::default());
-            self.stations.insert(*b, Station::default());
+
+        for (a_pos, (a, b)) in line.iter().tuple_windows().enumerate() {
+            self.graph.add_edge(a, b);
+            self.graph.add_edge(b, a);
+            self.graph.add_node(
+                a,
+                Station::new(vec![Rc::clone(line.get_stop(a_pos).unwrap())]),
+            );
+            self.graph.add_node(
+                b,
+                Station::new(vec![Rc::clone(line.get_stop(a_pos + 1).unwrap())]),
+            );
         }
 
         let line = Rc::new(line);
@@ -41,14 +32,21 @@ impl TrainSystem {
     pub fn add_train(
         &mut self,
         capacity: usize,
-        start_station: StationId,
         line: &Rc<TrainLine>,
-    ) -> Result<TrainId, ()> {
-        let station = self.stations.get_mut(&start_station).ok_or(())?;
+        pos_in_line: usize,
+        dir: Direction,
+    ) -> Result<TrainId, String> {
+        let station_id = line.get(pos_in_line).ok_or_else(|| "Invalid pos in line")?;
+        let station = self
+            .graph
+            .get_node_mut(station_id)
+            .ok_or_else(|| "Line is broken, no station connected")?;
 
-        let _ = self
-            .trains
-            .insert(self.next_train_id, Train::new(Rc::clone(line), capacity));
+        let _ = self.trains.insert(
+            self.next_train_id,
+            Train::new(Rc::clone(line), capacity, pos_in_line, dir)
+                .ok_or_else(|| "Invalid pos in line")?,
+        );
         station.train_enter();
         self.next_train_id += 1;
 
