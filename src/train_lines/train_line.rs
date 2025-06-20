@@ -8,10 +8,10 @@ pub enum Direction {
 }
 
 impl Direction {
-    pub(crate) fn reverse(self) -> Direction {
+    pub(crate) const fn reverse(self) -> Self {
         match self {
-            Direction::Left => Direction::Right,
-            Direction::Right => Direction::Left,
+            Self::Left => Self::Right,
+            Self::Right => Self::Left,
         }
     }
 }
@@ -21,7 +21,7 @@ pub struct TrainLine {
 }
 
 impl TrainLine {
-    pub fn new(stops: Vec<StationId>) -> Self {
+    pub const fn new(stops: Vec<StationId>) -> Self {
         Self { stops }
     }
 
