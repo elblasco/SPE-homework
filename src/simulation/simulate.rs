@@ -24,20 +24,30 @@ impl Simulation {
 
     fn train_arrive(&mut self, time: Time, train_id: TrainId) -> Option<Event> {
         let train = self.sys.trains.get_mut(&train_id)?;
-        let start_station_id = train.get_curr_station();
-        let (next_station_id, _) = train.get_next_station();
+
+        let exited_station_id = train.get_curr_station();
+        let (entering_station_id, _) = train.get_next_station();
+
+        let curr_station = self.sys.stations.get_mut(&entering_station_id)?;
+        curr_station.train_enter();
+
         train.go_next_stop();
+
         let edge = self
             .sys
             .graph
-            .edge_weight_mut(start_station_id, next_station_id)?;
+            .edge_weight_mut(exited_station_id, entering_station_id)?;
         edge.train_exit().unwrap(); // TODO SHOULD ABSOLUTELY NOT BE AN UNWRAP
-        let arrival_time = time + 100_000;
-        self.events.push(Event {
+        let arrival_time = time
+            + if exited_station_id == entering_station_id {
+                1
+            } else {
+                edge.get_distance()
+            };
+        Some(Event {
             time: arrival_time,
-            kind: EventKind::TrainArrive(train_id),
-        });
-        todo!()
+            kind: EventKind::TrainDepart(train_id),
+        })
     }
 
     fn train_depart(&mut self, time: Time, train_id: TrainId) -> Option<Event> {
