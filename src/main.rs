@@ -5,7 +5,7 @@
 #![allow(dead_code)]
 #![allow(clippy::missing_const_for_fn)]
 
-use crate::simulation::{EventKind, Simulation};
+use crate::simulation::{Event, EventKind, Simulation};
 use crate::train_lines::train_line::{Direction, TrainLine};
 
 mod graph;
@@ -34,41 +34,8 @@ fn simulate(mut system: Simulation) {
     while running {
         println!("\nEVENT {i} {:?}:", system.peek_event());
         let current_event = system.peek_event().unwrap();
-        match current_event.kind {
-            EventKind::Start | EventKind::End => {}
-            EventKind::TrainArrive(train_id) => {
-                let train = system
-                    .trains
-                    .get(&train_id)
-                    .expect("Arrival of a train that doesn't exist");
-
-                let start = train.get_curr_station();
-                let (end, dir) = train.get_next_station();
-                println!(
-                    "{train_id} train {train:?} entering station {end} (from {start} with direction {dir:?}"
-                );
-            }
-            EventKind::TrainDepart(train_id) => {
-                let train = system
-                    .trains
-                    .get(&train_id)
-                    .expect("Departure of a train that doesn't exist");
-
-                let start = train.get_curr_station();
-                let (end, dir) = train.get_next_station();
-                println!(
-                    "{train_id} train {train:?} exiting station {start} (to {end}) with direction {dir:?}"
-                );
-            }
-            EventKind::PersonArrive(station_id) => {
-                let station = system
-                    .graph
-                    .get_node(station_id)
-                    .expect("Person arrive to not existent station");
-
-                println!("Person arrived ad station {station_id}: {station:?}");
-            }
-        }
+        print!("BEFORE:");
+        print_dbg(&system, &current_event);
 
         match system.simulation_step() {
             Ok(status) => running = !status,
@@ -82,5 +49,46 @@ fn simulate(mut system: Simulation) {
         }
 
         i += 1;
+
+        print!("BEFORE:");
+        print_dbg(&system, &current_event);
+    }
+}
+
+fn print_dbg(system: &Simulation, current_event: &Event) {
+    match current_event.kind {
+        EventKind::Start | EventKind::End => {}
+        EventKind::TrainArrive(train_id) => {
+            let train = system
+                .trains
+                .get(&train_id)
+                .expect("Arrival of a train that doesn't exist");
+
+            let start = train.get_curr_station();
+            let (end, dir) = train.get_next_station();
+            println!(
+                "{train_id} train {train:?} entering station {end} (from {start} with direction {dir:?}"
+            );
+        }
+        EventKind::TrainDepart(train_id) => {
+            let train = system
+                .trains
+                .get(&train_id)
+                .expect("Departure of a train that doesn't exist");
+
+            let start = train.get_curr_station();
+            let (end, dir) = train.get_next_station();
+            println!(
+                "{train_id} train {train:?} exiting station {start} (to {end}) with direction {dir:?}"
+            );
+        }
+        EventKind::PersonArrive(station_id) => {
+            let station = system
+                .graph
+                .get_node(station_id)
+                .expect("Person arrive to not existent station");
+
+            println!("Person arrived ad station {station_id}: {station:?}");
+        }
     }
 }
