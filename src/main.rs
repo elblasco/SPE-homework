@@ -19,18 +19,5 @@ fn main() {
     system.add_train(3, &line, 2, Direction::Left).unwrap();
     system.add_train(5, &line, 3, Direction::Right).unwrap();
 
-    let mut running = true;
-    while running {
-        println!("{:?}", system.peek_event());
-        match system.simulation_step() {
-            Ok(status) => running = !status,
-            Err(error) => {
-                println!("Simulation errored out");
-                println!("{}", error);
-                println!();
-                println!("{:?}", system);
-                running = false;
-            }
-        }
-    }
+    simulate(system);
 }
