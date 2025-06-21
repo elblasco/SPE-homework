@@ -28,8 +28,8 @@ impl Train {
             n_passenger: 0,
             max_passenger,
             line,
-            pos_in_line, // TODO
-            direction,   // TODO
+            pos_in_line,
+            direction,
         })
     }
 
