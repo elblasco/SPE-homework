@@ -1,6 +1,8 @@
-use crate::train_lines::{Direction, StationId, TrainLine};
+use crate::train_lines::StationId;
+use crate::train_lines::train_line::{Direction, TrainLine};
 use std::rc::Rc;
 
+#[derive(Debug)]
 pub struct Train {
     n_passenger: usize,
     max_passenger: usize,
@@ -11,17 +13,22 @@ pub struct Train {
     // status: Status,
 }
 
-impl Train {}
-
 impl Train {
-    pub const fn new(line: Rc<TrainLine>, max_passenger: usize) -> Self {
-        Self {
+    pub fn new(
+        line: Rc<TrainLine>,
+        max_passenger: usize,
+        pos_in_line: usize,
+        direction: Direction,
+    ) -> Option<Self> {
+        line.get(pos_in_line)?;
+
+        Some(Self {
             n_passenger: 0,
             max_passenger,
             line,
-            pos_in_line: 0usize,         // TODO
-            direction: Direction::Right, // TODO
-        }
+            pos_in_line, // TODO
+            direction,   // TODO
+        })
     }
 
     pub fn get_curr_station(&self) -> StationId {
@@ -46,9 +53,27 @@ impl Train {
         (self.pos_in_line, self.direction.reverse())
     }
 
+    pub fn get_pos_in_line(&self) -> usize {
+        self.pos_in_line
+    }
+
     pub fn go_next_stop(&mut self) {
         let (next_pos, next_dir) = self.get_next_position();
         self.pos_in_line = next_pos;
         self.direction = next_dir;
+    }
+
+    pub fn load_people_at_curr_station(&mut self) -> Result<(), String> {
+        let line_stop = self
+            .line
+            .get_stop(self.pos_in_line)
+            .ok_or("Train's line stop does not exist")?;
+
+        let n_people = line_stop
+            .borrow_mut()
+            .person_exit(self.direction, self.max_passenger - self.n_passenger);
+        self.n_passenger += n_people;
+        assert!(self.n_passenger <= self.max_passenger);
+        Ok(())
     }
 }

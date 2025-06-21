@@ -1,7 +1,7 @@
 use crate::train_lines::{StationId, Time, TrainId};
 use std::cmp::Ordering;
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub enum EventKind {
     Start,
     End,
@@ -10,7 +10,7 @@ pub enum EventKind {
     PersonArrive(StationId),
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Event {
     pub time: Time,
     pub kind: EventKind,
