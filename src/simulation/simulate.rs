@@ -45,7 +45,7 @@ impl Simulation {
             .get_node_mut(station_id)
             .ok_or("Station does not exist")?;
         let line_stop = station
-            .get_random_line_stop_mut()
+            .get_random_line_stop()
             .ok_or("Station has no line stops")?;
         line_stop.borrow_mut().person_enter(Direction::rand(), 1);
 
@@ -85,6 +85,8 @@ impl Simulation {
         };
 
         train.go_next_stop();
+        let curr_station = self.graph.get_node(end).ok_or("Station not found")?;
+        train.unload_people_at_curr_station(curr_station);
 
         Ok(Event {
             time: arrival_time,

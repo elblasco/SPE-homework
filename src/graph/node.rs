@@ -29,7 +29,7 @@ impl Station {
         Err(())
     }
 
-    pub fn get_random_line_stop_mut(&self) -> Option<Rc<RefCell<LineStop>>> {
+    pub fn get_random_line_stop(&self) -> Option<Rc<RefCell<LineStop>>> {
         if self.line_stops.is_empty() {
             return None;
         }
