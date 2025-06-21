@@ -53,9 +53,27 @@ impl Train {
         (self.pos_in_line, self.direction.reverse())
     }
 
+    pub fn get_pos_in_line(&self) -> usize {
+        self.pos_in_line
+    }
+
     pub fn go_next_stop(&mut self) {
         let (next_pos, next_dir) = self.get_next_position();
         self.pos_in_line = next_pos;
         self.direction = next_dir;
+    }
+
+    pub fn load_people_at_curr_station(&mut self) -> Result<(), String> {
+        let line_stop = self
+            .line
+            .get_stop(self.pos_in_line)
+            .ok_or("Train's line stop does not exist")?;
+
+        let n_people = line_stop
+            .borrow_mut()
+            .person_exit(self.direction, self.max_passenger - self.n_passenger);
+        self.n_passenger += n_people;
+        assert!(self.n_passenger <= self.max_passenger);
+        Ok(())
     }
 }

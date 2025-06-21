@@ -12,18 +12,18 @@ pub enum Direction {
 }
 
 impl Direction {
-    pub(crate) const fn reverse(self) -> Self {
+    pub fn reverse(self) -> Self {
         match self {
             Self::Left => Self::Right,
             Self::Right => Self::Left,
         }
     }
 
-    pub fn rand() -> Direction {
+    pub fn rand() -> Self {
         if rand::rng().random_bool(0.5) {
-            Direction::Left
+            Self::Left
         } else {
-            Direction::Right
+            Self::Right
         }
     }
 }
@@ -44,11 +44,10 @@ impl LineStop {
     }
 
     fn get_mut_platform(&mut self, dir: Direction) -> &mut usize {
-        let platform = match dir {
+        match dir {
             Direction::Left => &mut self.people_going_left,
             Direction::Right => &mut self.people_going_right,
-        };
-        platform
+        }
     }
 
     pub fn person_enter(&mut self, dir: Direction, n: usize) -> usize {
@@ -63,6 +62,13 @@ impl LineStop {
         let n_to_exit = min(*platform, n);
         *platform -= n_to_exit;
         n_to_exit
+    }
+
+    pub fn get_people_on_platform(&self, dir: Direction) -> usize {
+        match dir {
+            Direction::Left => self.people_going_left,
+            Direction::Right => self.people_going_right,
+        }
     }
 }
 
@@ -111,13 +117,13 @@ impl TrainLine {
         self.get(pos).map(|_| pos)
     }
 
-    pub fn person_enter(&mut self, pos: usize, dir: Direction, n: usize) -> Result<usize, ()> {
+    pub fn person_enter(&self, pos: usize, dir: Direction, n: usize) -> Result<usize, ()> {
         let stop = self.stops.get(pos).ok_or(())?;
         Ok(stop.borrow_mut().person_enter(dir, n))
     }
 
     // Train may want to take up to n people
-    pub fn person_exit(&mut self, pos: usize, dir: Direction, n: usize) -> Result<usize, ()> {
+    pub fn person_exit(&self, pos: usize, dir: Direction, n: usize) -> Result<usize, ()> {
         let stop = self.stops.get(pos).ok_or(())?;
         Ok(stop.borrow_mut().person_exit(dir, n))
     }
