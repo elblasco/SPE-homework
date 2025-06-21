@@ -36,16 +36,15 @@ impl Simulation {
         pos_in_line: usize,
         dir: Direction,
     ) -> Result<TrainId, String> {
-        let station_id = line.get(pos_in_line).ok_or_else(|| "Invalid pos in line")?;
+        let station_id = line.get(pos_in_line).ok_or("Invalid pos in line")?;
         let station = self
             .graph
             .get_node_mut(station_id)
-            .ok_or_else(|| "Line is broken, no station connected")?;
+            .ok_or("Line is broken, no station connected")?;
 
         let _ = self.trains.insert(
             self.next_train_id,
-            Train::new(Rc::clone(line), capacity, pos_in_line, dir)
-                .ok_or_else(|| "Invalid pos in line")?,
+            Train::new(Rc::clone(line), capacity, pos_in_line, dir).ok_or("Invalid pos in line")?,
         );
         station.train_enter();
         self.next_train_id += 1;

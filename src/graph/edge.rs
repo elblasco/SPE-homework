@@ -9,7 +9,7 @@ pub struct Edge {
 }
 
 impl Edge {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             occupancy: 0,
             // capacity: 1,
@@ -17,11 +17,11 @@ impl Edge {
         }
     }
 
-    pub const fn train_enter(&mut self) {
+    pub fn train_enter(&mut self) {
         self.occupancy += 1;
     }
 
-    pub const fn train_exit(&mut self) -> Result<usize, ()> {
+    pub fn train_exit(&mut self) -> Result<usize, ()> {
         if self.occupancy > 0 {
             self.occupancy -= 1;
             return Ok(self.occupancy);
@@ -29,7 +29,7 @@ impl Edge {
         Err(())
     }
 
-    pub const fn get_distance(&self) -> Time {
+    pub fn get_distance(&self) -> Time {
         self.distance
     }
 }

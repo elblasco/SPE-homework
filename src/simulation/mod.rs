@@ -4,7 +4,7 @@ mod simulate;
 mod train_system;
 
 use crate::graph::Graph;
-use crate::simulation::event::{Event, EventKind};
+pub use crate::simulation::event::{Event, EventKind};
 use crate::simulation::info::Info;
 use crate::train_lines::train::Train;
 use crate::train_lines::train_line::TrainLine;
@@ -15,17 +15,17 @@ use std::fmt::Debug;
 use std::rc::Rc;
 
 pub struct Simulation {
-    graph: Graph,
-    lines: Vec<Rc<TrainLine>>,
-    trains: HashMap<TrainId, Train>,
-    next_train_id: TrainId,
+    pub graph: Graph,
+    pub lines: Vec<Rc<TrainLine>>,
+    pub trains: HashMap<TrainId, Train>,
+    pub next_train_id: TrainId,
 
-    info: Info,
+    pub info: Info,
     events: BinaryHeap<Event>,
 }
 
 impl Simulation {
-    pub(crate) fn new(start_time: Time, end_time: Time) -> Self {
+    pub fn new(start_time: Time, end_time: Time) -> Self {
         let mut events = BinaryHeap::new();
         events.push(Event {
             time: start_time,
@@ -48,7 +48,7 @@ impl Simulation {
     }
 
     pub fn peek_event(&self) -> Option<Event> {
-        self.events.peek().map(|event| event.clone())
+        self.events.peek().cloned()
     }
 }
 

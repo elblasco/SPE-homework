@@ -6,7 +6,7 @@ use std::rc::Rc;
 #[derive(Debug)]
 pub struct Station {
     occupancy: usize,
-    line_stops: Vec<Rc<RefCell<LineStop>>>,
+    pub line_stops: Vec<Rc<RefCell<LineStop>>>,
 }
 
 impl Station {
@@ -17,11 +17,11 @@ impl Station {
         }
     }
 
-    pub const fn train_enter(&mut self) {
+    pub fn train_enter(&mut self) {
         self.occupancy += 1;
     }
 
-    pub const fn train_exit(&mut self) -> Result<usize, ()> {
+    pub fn train_exit(&mut self) -> Result<usize, ()> {
         if self.occupancy > 0 {
             self.occupancy -= 1;
             return Ok(self.occupancy);
@@ -29,7 +29,7 @@ impl Station {
         Err(())
     }
 
-    pub fn get_random_line_stop_mut(&mut self) -> Option<Rc<RefCell<LineStop>>> {
+    pub fn get_random_line_stop_mut(&self) -> Option<Rc<RefCell<LineStop>>> {
         if self.line_stops.is_empty() {
             return None;
         }
