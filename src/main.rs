@@ -13,6 +13,12 @@ mod simulation;
 mod train_lines;
 
 fn main() {
+    // let file = File::open("datasets/London.json").expect("Cannot open file");
+    // let json: serde_json::Value =
+    //     serde_json::from_reader(file).expect("JSON was not well-formatted");
+    //
+    // println!("{json}");
+
     let mut system = Simulation::new(0, 1000);
     let line = TrainLine::new(vec![1, 2, 3, 4, 5]);
     let line = system.add_line(line);
