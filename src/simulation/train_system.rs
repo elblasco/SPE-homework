@@ -1,8 +1,8 @@
 use crate::graph::node::Station;
 use crate::simulation::Simulation;
+use crate::train_lines::TrainId;
 use crate::train_lines::train::Train;
 use crate::train_lines::train_line::{Direction, TrainLine};
-use crate::train_lines::TrainId;
 use itertools::Itertools;
 use std::rc::Rc;
 

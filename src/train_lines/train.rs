@@ -1,5 +1,5 @@
-use crate::train_lines::train_line::{Direction, TrainLine};
 use crate::train_lines::StationId;
+use crate::train_lines::train_line::{Direction, TrainLine};
 use std::rc::Rc;
 
 #[derive(Debug)]
