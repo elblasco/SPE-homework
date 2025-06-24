@@ -5,56 +5,33 @@
 #![allow(dead_code)]
 #![allow(clippy::missing_const_for_fn)]
 
+use crate::dataset::Dataset;
 use crate::simulation::{Event, EventKind, Simulation};
-use serde::Serialize;
+use crate::train_lines::train_line::Direction;
 use std::fs::File;
 
+mod dataset;
 mod graph;
 mod simulation;
 mod train_lines;
 
-#[derive(Serialize, Debug)]
-struct Line {
-    name: String,
-    color: String,
-    stops: Vec<usize>,
-}
-
 fn main() {
     let file = File::open("datasets/Wien.json").expect("Cannot open file");
-    let json: serde_json::Value =
-        serde_json::from_reader(file).expect("JSON was not well-formatted");
+    let dataset =
+        serde_json::from_reader::<File, Dataset>(file).expect("JSON was not well-formatted");
 
-    // println!("{:?}", json["lines"]);
+    let mut system = Simulation::new(0, 1000, &dataset.stations);
 
-    let mut v = vec![];
-    for line in json["lines"].as_array().unwrap() {
-        let mut stops = vec![];
-        for stop in line["stop"].as_array().unwrap() {
-            let mut found = None;
-            for (id, station) in json["stations"].as_array().unwrap().iter().enumerate() {
-                if station["name"].as_str().unwrap() == stop["station"].as_str().unwrap() {
-                    found = Some(id);
-                }
-            }
-            stops.push(found.unwrap());
-        }
-
-        v.push(Line {
-            name: line["name"].as_str().unwrap().to_string(),
-            color: line["color"].as_str().unwrap().to_string(),
-            stops,
-        })
+    let mut lines = vec![];
+    for data in &dataset.lines {
+        let new_line = system.add_line(data);
+        lines.push(new_line);
     }
-    println!("{v:?}");
 
-    // let mut system = Simulation::new(0, 1000);
-    // let line = TrainLine::new(vec![1, 2, 3, 4, 5]);
-    // let line = system.add_line(line);
-    // system.add_train(3, &line, 2, Direction::Left).unwrap();
-    // system.add_train(5, &line, 3, Direction::Right).unwrap();
-    //
-    // simulate(system);
+    system.add_train(3, &lines[0], 2, Direction::Left).unwrap();
+    system.add_train(5, &lines[1], 3, Direction::Right).unwrap();
+
+    simulate(system);
 }
 
 fn simulate(mut system: Simulation) {
@@ -63,31 +40,32 @@ fn simulate(mut system: Simulation) {
     while running {
         println!("\nEVENT {i} {:?}:", system.peek_event());
         let current_event = system.peek_event().unwrap();
-        print!("BEFORE:");
-        print_dbg(&system, &current_event);
+        print_dbg("BEFORE:", &system, &current_event);
 
-        match system.simulation_step() {
+        let result = system.simulation_step();
+
+        match result {
             Ok(status) => running = !status,
             Err(error) => {
-                println!("Simulation errored out");
+                println!("\n\nCORE DUMPED");
+                println!("{:?}", system.trains);
+                println!("\n\nSIMULATION ERRORED OUT");
                 println!("{error}");
-                println!();
-                println!("{system:?}");
                 running = false;
             }
         }
 
+        print_dbg("AFTER:", &system, &current_event);
         i += 1;
-
-        print!("BEFORE:");
-        print_dbg(&system, &current_event);
     }
 }
 
-fn print_dbg(system: &Simulation, current_event: &Event) {
+fn print_dbg(name: &str, system: &Simulation, current_event: &Event) {
     match current_event.kind {
         EventKind::Start | EventKind::End => {}
         EventKind::TrainArrive(train_id) => {
+            print!("{name} ");
+
             let train = system
                 .trains
                 .get(&train_id)
@@ -100,6 +78,8 @@ fn print_dbg(system: &Simulation, current_event: &Event) {
             );
         }
         EventKind::TrainDepart(train_id) => {
+            print!("{name} ");
+
             let train = system
                 .trains
                 .get(&train_id)
@@ -112,6 +92,8 @@ fn print_dbg(system: &Simulation, current_event: &Event) {
             );
         }
         EventKind::PersonArrive(station_id) => {
+            print!("{name} ");
+
             let station = system
                 .graph
                 .get_node(station_id)

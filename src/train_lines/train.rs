@@ -1,6 +1,6 @@
 use crate::graph::node::Station;
-use crate::train_lines::train_line::{Direction, TrainLine};
 use crate::train_lines::StationId;
+use crate::train_lines::train_line::{Direction, TrainLine};
 use rand::Rng;
 use std::rc::Rc;
 

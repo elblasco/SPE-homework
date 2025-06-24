@@ -7,13 +7,19 @@ use std::rc::Rc;
 pub struct Station {
     occupancy: usize,
     pub line_stops: Vec<Rc<RefCell<LineStop>>>,
+    name: String,
+    lat: f64,
+    lon: f64,
 }
 
 impl Station {
-    pub fn new(line_stops: Vec<Rc<RefCell<LineStop>>>) -> Self {
+    pub fn new(name: &str, lat: f64, lon: f64) -> Self {
         Self {
             occupancy: 0,
-            line_stops,
+            line_stops: Vec::default(),
+            name: String::from(name),
+            lat,
+            lon,
         }
     }
 
@@ -36,5 +42,9 @@ impl Station {
 
         let rand = rand::rng().random_range(0..self.line_stops.len());
         self.line_stops.get(rand).map(Rc::clone)
+    }
+
+    pub fn add_line_stop(&mut self, new_train_line: Rc<RefCell<LineStop>>) {
+        self.line_stops.push(new_train_line);
     }
 }

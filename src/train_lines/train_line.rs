@@ -29,7 +29,7 @@ impl Direction {
 }
 
 pub struct LineStop {
-    station_id: StationId,
+    pub station_id: StationId,
     people_going_left: usize,
     people_going_right: usize,
 }
@@ -70,6 +70,10 @@ impl LineStop {
             Direction::Right => self.people_going_right,
         }
     }
+
+    pub fn get_station_id(&self) -> StationId {
+        self.station_id
+    }
 }
 
 impl Debug for LineStop {
@@ -96,10 +100,14 @@ impl TrainLine {
         Some(self.stops.get(pos)?.borrow().station_id)
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = StationId> {
+    pub fn iter_station_id(&self) -> impl Iterator<Item = StationId> {
         self.stops
             .iter()
             .map(|line_stop| line_stop.borrow().station_id)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &Rc<RefCell<LineStop>>> {
+        self.stops.iter()
     }
 
     pub fn get_next(&self, pos: usize, dir: Direction) -> Option<StationId> {

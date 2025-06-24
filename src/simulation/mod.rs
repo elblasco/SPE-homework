@@ -3,6 +3,8 @@ mod info;
 mod simulate;
 mod train_system;
 
+use crate::dataset::StationData;
+use crate::graph::node::Station;
 use crate::graph::Graph;
 pub use crate::simulation::event::{Event, EventKind};
 use crate::simulation::info::Info;
@@ -25,26 +27,35 @@ pub struct Simulation {
 }
 
 impl Simulation {
-    pub fn new(start_time: Time, end_time: Time) -> Self {
-        let mut events = BinaryHeap::new();
-        events.push(Event {
-            time: start_time,
-            kind: EventKind::Start,
-        });
-        events.push(Event {
-            time: end_time,
-            kind: EventKind::End,
-        });
-
-        Self {
+    pub fn new(start_time: Time, end_time: Time, stations: &[StationData]) -> Self {
+        let mut new = Self {
             graph: Graph::new(),
             lines: vec![],
             trains: HashMap::new(),
             next_train_id: 0,
-
             info: Info::default(),
-            events,
+            events: Self::get_initial_events(start_time, end_time),
+        };
+
+        for (idx, data) in stations.iter().enumerate() {
+            new.graph
+                .add_node(idx, Station::new(&data.name, data.lat, data.lon));
         }
+
+        new
+    }
+
+    fn get_initial_events(start_time: Time, end_time: Time) -> BinaryHeap<Event> {
+        BinaryHeap::from([
+            Event {
+                time: start_time,
+                kind: EventKind::Start,
+            },
+            Event {
+                time: end_time,
+                kind: EventKind::End,
+            },
+        ])
     }
 
     pub fn peek_event(&self) -> Option<Event> {

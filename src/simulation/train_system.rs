@@ -1,4 +1,4 @@
-use crate::graph::node::Station;
+use crate::dataset::LineData;
 use crate::simulation::Simulation;
 use crate::train_lines::TrainId;
 use crate::train_lines::train::Train;
@@ -7,24 +7,20 @@ use itertools::Itertools;
 use std::rc::Rc;
 
 impl Simulation {
-    pub fn add_line(&mut self, line: TrainLine) -> Rc<TrainLine> {
-        // TODO remove and use map instead
+    pub fn add_line(&mut self, line_data: &LineData) -> Rc<TrainLine> {
+        let line = Rc::new(TrainLine::new(line_data.stops.clone()));
+        self.lines.push(Rc::clone(&line));
 
-        for (a_pos, (a, b)) in line.iter().tuple_windows().enumerate() {
+        for (a, b) in line.iter_station_id().tuple_windows() {
             self.graph.add_edge(a, b);
             self.graph.add_edge(b, a);
-            self.graph.add_node(
-                a,
-                Station::new(vec![Rc::clone(line.get_stop(a_pos).unwrap())]),
-            );
-            self.graph.add_node(
-                b,
-                Station::new(vec![Rc::clone(line.get_stop(a_pos + 1).unwrap())]),
-            );
         }
 
-        let line = Rc::new(line);
-        self.lines.push(Rc::clone(&line));
+        for stop in line.iter() {
+            let station_id = stop.borrow().get_station_id();
+            let node = self.graph.get_node_mut(station_id).unwrap();
+            node.add_line_stop(Rc::clone(stop));
+        }
 
         line
     }
