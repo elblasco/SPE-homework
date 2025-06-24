@@ -6,26 +6,55 @@
 #![allow(clippy::missing_const_for_fn)]
 
 use crate::simulation::{Event, EventKind, Simulation};
-use crate::train_lines::train_line::{Direction, TrainLine};
+use serde::Serialize;
+use std::fs::File;
 
 mod graph;
 mod simulation;
 mod train_lines;
 
+#[derive(Serialize, Debug)]
+struct Line {
+    name: String,
+    color: String,
+    stops: Vec<usize>,
+}
+
 fn main() {
-    // let file = File::open("datasets/London.json").expect("Cannot open file");
-    // let json: serde_json::Value =
-    //     serde_json::from_reader(file).expect("JSON was not well-formatted");
+    let file = File::open("datasets/Wien.json").expect("Cannot open file");
+    let json: serde_json::Value =
+        serde_json::from_reader(file).expect("JSON was not well-formatted");
+
+    // println!("{:?}", json["lines"]);
+
+    let mut v = vec![];
+    for line in json["lines"].as_array().unwrap() {
+        let mut stops = vec![];
+        for stop in line["stop"].as_array().unwrap() {
+            let mut found = None;
+            for (id, station) in json["stations"].as_array().unwrap().iter().enumerate() {
+                if station["name"].as_str().unwrap() == stop["station"].as_str().unwrap() {
+                    found = Some(id);
+                }
+            }
+            stops.push(found.unwrap());
+        }
+
+        v.push(Line {
+            name: line["name"].as_str().unwrap().to_string(),
+            color: line["color"].as_str().unwrap().to_string(),
+            stops,
+        })
+    }
+    println!("{v:?}");
+
+    // let mut system = Simulation::new(0, 1000);
+    // let line = TrainLine::new(vec![1, 2, 3, 4, 5]);
+    // let line = system.add_line(line);
+    // system.add_train(3, &line, 2, Direction::Left).unwrap();
+    // system.add_train(5, &line, 3, Direction::Right).unwrap();
     //
-    // println!("{json}");
-
-    let mut system = Simulation::new(0, 1000);
-    let line = TrainLine::new(vec![1, 2, 3, 4, 5]);
-    let line = system.add_line(line);
-    system.add_train(3, &line, 2, Direction::Left).unwrap();
-    system.add_train(5, &line, 3, Direction::Right).unwrap();
-
-    simulate(system);
+    // simulate(system);
 }
 
 fn simulate(mut system: Simulation) {
