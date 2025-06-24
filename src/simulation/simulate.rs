@@ -1,7 +1,7 @@
 use crate::simulation::info::Info;
 use crate::simulation::{Event, EventKind, InfoKind, Simulation};
 use crate::train_lines::{Direction, StationId, Time, TrainId};
-use crate::utils::time::from_seconds;
+use crate::utils::time::{from_minutes, from_seconds};
 use rand::Rng;
 
 impl Simulation {
@@ -96,8 +96,7 @@ impl Simulation {
         let (end, _) = train.get_next_station();
 
         let arrival_time = if start == end {
-            // TODO not use 1
-            time + 1.0
+            time + from_minutes(1.0)
         } else {
             let curr_station = self.graph.get_node_mut(end).ok_or("Station not found")?;
             curr_station.train_enter();
@@ -141,8 +140,7 @@ impl Simulation {
         train.load_people_at_curr_station()?;
 
         let arrival_time = if start == end {
-            // TODO not use 1
-            time + 1.0
+            time + from_minutes(1.0)
         } else {
             let curr_station = self
                 .graph
