@@ -1,6 +1,6 @@
 use crate::graph::node::Station;
-use crate::train_lines::StationId;
-use crate::train_lines::train_line::{Direction, TrainLine};
+use crate::train_lines::line::Line;
+use crate::train_lines::{Direction, StationId};
 use rand::Rng;
 use std::rc::Rc;
 
@@ -9,15 +9,14 @@ pub struct Train {
     n_passenger: usize,
     max_passenger: usize,
 
-    line: Rc<TrainLine>,
+    line: Rc<Line>,
     pos_in_line: usize,
     direction: Direction,
-    // status: Status,
 }
 
 impl Train {
     pub fn new(
-        line: Rc<TrainLine>,
+        line: Rc<Line>,
         max_passenger: usize,
         pos_in_line: usize,
         direction: Direction,
@@ -88,5 +87,9 @@ impl Train {
                 random_stop.borrow_mut().person_enter(Direction::rand(), 1);
             }
         }
+    }
+
+    pub fn get_line_name(&self) -> String {
+        self.line.get_name()
     }
 }

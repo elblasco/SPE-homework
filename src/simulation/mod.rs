@@ -4,25 +4,26 @@ mod simulate;
 mod train_system;
 
 use crate::dataset::StationData;
-use crate::graph::node::Station;
 use crate::graph::Graph;
+use crate::graph::node::Station;
 pub use crate::simulation::event::{Event, EventKind};
-use crate::simulation::info::Info;
+use crate::train_lines::line::Line;
 use crate::train_lines::train::Train;
-use crate::train_lines::train_line::TrainLine;
 use crate::train_lines::{Time, TrainId};
 use std::collections::{BinaryHeap, HashMap};
 use std::fmt;
 use std::fmt::Debug;
 use std::rc::Rc;
 
+pub use info::InfoKind;
+
 pub struct Simulation {
     pub graph: Graph,
-    pub lines: Vec<Rc<TrainLine>>,
+    pub lines: Vec<Rc<Line>>,
     pub trains: HashMap<TrainId, Train>,
     pub next_train_id: TrainId,
 
-    pub info: Info,
+    //pub info: SystemInfo,
     events: BinaryHeap<Event>,
 }
 
@@ -33,7 +34,7 @@ impl Simulation {
             lines: vec![],
             trains: HashMap::new(),
             next_train_id: 0,
-            info: Info::default(),
+            //info: Info::SimulationStarted(),
             events: Self::get_initial_events(start_time, end_time),
         };
 

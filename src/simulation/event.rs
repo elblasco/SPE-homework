@@ -10,7 +10,7 @@ pub enum EventKind {
     PersonArrive(StationId),
 }
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Clone)]
 pub struct Event {
     pub time: Time,
     pub kind: EventKind,
@@ -25,6 +25,14 @@ impl PartialOrd for Event {
 impl Ord for Event {
     fn cmp(&self, other: &Self) -> Ordering {
         // Inverted for inverse ordering
-        other.time.cmp(&self.time)
+        f64::total_cmp(&other.time, &self.time)
     }
 }
+
+impl PartialEq for Event {
+    fn eq(&self, other: &Self) -> bool {
+        other.time == self.time
+    }
+}
+
+impl Eq for Event {}

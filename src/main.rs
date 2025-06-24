@@ -6,25 +6,27 @@
 #![allow(clippy::missing_const_for_fn)]
 
 use crate::dataset::Dataset;
-use crate::simulation::{Event, EventKind, Simulation};
-use crate::train_lines::train_line::Direction;
+use crate::simulation::{InfoKind, Simulation};
+use crate::train_lines::Direction;
+use crate::utils::time::{fmt_time, from_minutes};
 use std::fs::File;
 
 mod dataset;
 mod graph;
 mod simulation;
 mod train_lines;
+mod utils;
 
 fn main() {
     let file = File::open("datasets/Wien.json").expect("Cannot open file");
     let dataset =
         serde_json::from_reader::<File, Dataset>(file).expect("JSON was not well-formatted");
 
-    let mut system = Simulation::new(0, 1000, &dataset.stations);
+    let mut system = Simulation::new(0.0, from_minutes(60.0), &dataset.stations);
 
     let mut lines = vec![];
     for data in &dataset.lines {
-        let new_line = system.add_line(data);
+        let new_line = system.add_line(data).expect("Cannot create line");
         lines.push(new_line);
     }
 
@@ -36,16 +38,16 @@ fn main() {
 
 fn simulate(mut system: Simulation) {
     let mut running = true;
-    let mut i = 0;
-    while running {
-        println!("\nEVENT {i} {:?}:", system.peek_event());
-        let current_event = system.peek_event().unwrap();
-        print_dbg("BEFORE:", &system, &current_event);
 
+    println!();
+    while running {
         let result = system.simulation_step();
 
         match result {
-            Ok(status) => running = !status,
+            Ok(info) => {
+                println!("LOG {} -> {:?}", fmt_time(info.time), info.kind);
+                running = !matches!(info.kind, InfoKind::SimulationEnded());
+            }
             Err(error) => {
                 println!("\n\nCORE DUMPED");
                 println!("{:?}", system.trains);
@@ -53,53 +55,6 @@ fn simulate(mut system: Simulation) {
                 println!("{error}");
                 running = false;
             }
-        }
-
-        print_dbg("AFTER:", &system, &current_event);
-        i += 1;
-    }
-}
-
-fn print_dbg(name: &str, system: &Simulation, current_event: &Event) {
-    match current_event.kind {
-        EventKind::Start | EventKind::End => {}
-        EventKind::TrainArrive(train_id) => {
-            print!("{name} ");
-
-            let train = system
-                .trains
-                .get(&train_id)
-                .expect("Arrival of a train that doesn't exist");
-
-            let start = train.get_curr_station();
-            let (end, dir) = train.get_next_station();
-            println!(
-                "{train_id} train {train:?} entering station {end} (from {start} with direction {dir:?}"
-            );
-        }
-        EventKind::TrainDepart(train_id) => {
-            print!("{name} ");
-
-            let train = system
-                .trains
-                .get(&train_id)
-                .expect("Departure of a train that doesn't exist");
-
-            let start = train.get_curr_station();
-            let (end, dir) = train.get_next_station();
-            println!(
-                "{train_id} train {train:?} exiting station {start} (to {end}) with direction {dir:?}"
-            );
-        }
-        EventKind::PersonArrive(station_id) => {
-            print!("{name} ");
-
-            let station = system
-                .graph
-                .get_node(station_id)
-                .expect("Person arrive to not existent station");
-
-            println!("Person arrived ad station {station_id}: {station:?}");
         }
     }
 }
