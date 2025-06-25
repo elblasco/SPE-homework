@@ -39,7 +39,6 @@ fn main() {
 fn simulate(mut system: Simulation) {
     let mut running = true;
 
-    println!();
     while running {
         let result = system.simulation_step();
 
