@@ -15,7 +15,9 @@ impl Simulation {
         println!("{}", line_data.name);
         for (a, b) in line.iter_station_id().tuple_windows() {
             let node_a = self.graph.get_node(a).ok_or("Missing station")?;
+            let name_a = node_a.get_name();
             let node_b = self.graph.get_node(b).ok_or("Missing station")?;
+            let name_b = node_b.get_name();
 
             let distance_m = haversine(
                 node_a.get_lat(),
@@ -23,11 +25,16 @@ impl Simulation {
                 node_b.get_lat(),
                 node_b.get_lon(),
             );
-            let time_distance: Time = from_seconds(distance_m / (300f64 / 3.6));
+            // https://homepage.univie.ac.at/horst.prillinger/ubahn/english/facts.html
+            // The average speed is 32.5 km/h not 300 km/h
+            let time_distance: Time = from_seconds(distance_m / (32.5 / 3.6));
 
             self.graph.add_edge(a, b, time_distance);
             self.graph.add_edge(b, a, time_distance);
-            println!("{}", fmt_time(time_distance));
+            println!(
+                "{name_a} -> {name_b} distance {distance_m:.02} m traveled in {} s",
+                fmt_time(time_distance)
+            );
         }
 
         for stop in line.iter() {
@@ -64,8 +71,15 @@ impl Simulation {
 }
 
 // Distance (meters) between two points (latitude and longitude in radians)
-fn haversine(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
+fn haversine(lat1_deg: f64, lon1_deg: f64, lat2_deg: f64, lon2_deg: f64) -> f64 {
     const EARTH_RADIUS: f64 = 6_371_008.771_4;
+    const DEG_TO_RAD: f64 = std::f64::consts::PI / 180.0;
+
+    // Convert degrees to radians
+    let lat1 = lat1_deg * DEG_TO_RAD;
+    let lon1 = lon1_deg * DEG_TO_RAD;
+    let lat2 = lat2_deg * DEG_TO_RAD;
+    let lon2 = lon2_deg * DEG_TO_RAD;
 
     let a = ((lat2 - lat1) / 2.0).sin().mul_add(
         ((lat2 - lat1) / 2.0).sin(),
