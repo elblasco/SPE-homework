@@ -3,6 +3,7 @@ use crate::simulation::{Event, EventKind, InfoKind, Simulation};
 use crate::train_lines::{Direction, StationId, Time, TrainId};
 use crate::utils::time::{from_minutes, from_seconds};
 use rand_distr::Distribution;
+use std::collections::VecDeque;
 
 impl Simulation {
     pub fn simulation_step(&mut self) -> Result<Info, String> {
@@ -16,12 +17,14 @@ impl Simulation {
             EventKind::End => InfoKind::SimulationEnded(),
             EventKind::TrainArrive(train_id) => {
                 let (new_event, info) = self.train_arrive(time, train_id)?;
-                self.events.push(new_event);
+                self.events.extend(new_event);
                 info
             }
             EventKind::TrainDepart(train_id) => {
                 let (new_event, info) = self.train_depart(time, train_id)?;
-                self.events.push(new_event);
+                if let Some(new_event) = new_event {
+                    self.events.push(new_event);
+                }
                 info
             }
             EventKind::PersonArrive(station_id) => {
@@ -93,7 +96,11 @@ impl Simulation {
         ))
     }
 
-    fn train_arrive(&mut self, time: Time, train_id: TrainId) -> Result<(Event, InfoKind), String> {
+    fn train_arrive(
+        &mut self,
+        time: Time,
+        train_id: TrainId,
+    ) -> Result<(Vec<Event>, InfoKind), String> {
         let train = self
             .trains
             .get_mut(&train_id)
@@ -120,15 +127,25 @@ impl Simulation {
 
         train.go_next_stop();
         let arrival_station = self.graph.get_node(end).ok_or("Station not found")?;
-
         // TODO maybe we should do something with them
         let unloaded_passengers = train.unload_people_at_curr_station(arrival_station);
 
-        Ok((
-            Event {
-                time: departure_time,
+        let mut events = vec![Event {
+            time: departure_time,
+            kind: EventKind::TrainDepart(train_id),
+        }];
+        let train_freed = self
+            .train_waiting
+            .get_mut(&(start, end))
+            .and_then(VecDeque::pop_front)
+            .map(|train_id| Event {
+                time,
                 kind: EventKind::TrainDepart(train_id),
-            },
+            });
+        events.extend(train_freed);
+
+        Ok((
+            events,
             InfoKind::TrainArrival {
                 train_id,
                 line_name: train.get_line_name(),
@@ -140,7 +157,11 @@ impl Simulation {
         ))
     }
 
-    fn train_depart(&mut self, time: Time, train_id: TrainId) -> Result<(Event, InfoKind), String> {
+    fn train_depart(
+        &mut self,
+        time: Time,
+        train_id: TrainId,
+    ) -> Result<(Option<Event>, InfoKind), String> {
         let train = self
             .trains
             .get_mut(&train_id)
@@ -154,6 +175,37 @@ impl Simulation {
         let arrival_time = if start == end {
             time + from_minutes(1.0)
         } else {
+            let edge = self
+                .graph
+                .get_edge(start, end)
+                .ok_or("Edge doesn't exist")?;
+
+            if !edge.has_free_space() {
+                let start_station = self
+                    .graph
+                    .get_node(start)
+                    .ok_or("Current station doesn't exist")?;
+
+                let end_station = self
+                    .graph
+                    .get_node(end)
+                    .ok_or("Current station doesn't exist")?;
+
+                self.train_waiting
+                    .entry((start, end))
+                    .or_default()
+                    .push_back(train_id);
+
+                return Ok((
+                    None,
+                    InfoKind::WaitingForEdge {
+                        train_id,
+                        start_station_name: start_station.get_name(),
+                        end_station_name: end_station.get_name(),
+                    },
+                ));
+            }
+
             let curr_station = self
                 .graph
                 .get_node_mut(start)
@@ -167,18 +219,19 @@ impl Simulation {
                 .graph
                 .get_edge_mut(start, end)
                 .ok_or("Edge doesn't exist")?;
-            edge.train_enter();
 
+            edge.train_enter()
+                .map_err(|()| "Cannot instert train because already full on node")?;
             time + from_seconds(edge.get_distance_m() / (train.get_speed_m_s() / 3.6))
         };
 
         let departure_station = self.graph.get_node(start).ok_or("Station not found")?;
 
         Ok((
-            Event {
+            Some(Event {
                 time: arrival_time,
                 kind: EventKind::TrainArrive(train_id),
-            },
+            }),
             InfoKind::TrainDeparture {
                 train_id,
                 line_name: train.get_line_name(),

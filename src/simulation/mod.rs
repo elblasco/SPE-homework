@@ -4,16 +4,16 @@ mod simulate;
 mod train_system;
 
 use crate::dataset::StationData;
-use crate::graph::Graph;
 use crate::graph::node::Station;
+use crate::graph::Graph;
 pub use crate::simulation::event::{Event, EventKind};
 use crate::train_lines::line::Line;
 use crate::train_lines::train::Train;
-use crate::train_lines::{Time, TrainId};
+use crate::train_lines::{StationId, Time, TrainId};
 use crate::utils::time::{from_minutes, from_seconds};
 pub use info::InfoKind;
 use rand_distr::Exp;
-use std::collections::{BinaryHeap, HashMap};
+use std::collections::{BinaryHeap, HashMap, VecDeque};
 use std::fmt;
 use std::fmt::Debug;
 use std::rc::Rc;
@@ -25,6 +25,7 @@ pub struct Simulation {
     next_train_id: TrainId,
     distr_train_at_station: Exp<Time>,
     events: BinaryHeap<Event>,
+    train_waiting: HashMap<(StationId, StationId), VecDeque<TrainId>>,
 }
 
 impl Simulation {
@@ -36,6 +37,7 @@ impl Simulation {
             next_train_id: 0,
             events: Self::get_initial_events(start_time, end_time),
             distr_train_at_station: Exp::new(1.0 / from_seconds(20.0)).unwrap(),
+            train_waiting: HashMap::new(),
         };
 
         for (idx, data) in stations.iter().enumerate() {

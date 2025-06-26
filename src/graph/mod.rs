@@ -45,8 +45,9 @@ impl Graph {
         self.graph.add_node(id);
     }
 
-    pub fn add_edge(&mut self, from: StationId, to: StationId, distance: f64) {
-        self.graph.add_edge(from, to, Edge::new(distance));
+    pub fn add_edge(&mut self, from: StationId, to: StationId, distance: f64, max_capacity: usize) {
+        self.graph
+            .add_edge(from, to, Edge::new(distance, max_capacity));
     }
 
     pub(crate) fn iter_station_id(&self) -> impl Iterator<Item = &StationId> {

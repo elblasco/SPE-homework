@@ -6,6 +6,8 @@ use crate::train_lines::{Direction, TrainId};
 use itertools::Itertools;
 use std::rc::Rc;
 
+const EDGE_MAX_CAPACITY: usize = 1;
+
 impl Simulation {
     pub fn add_line(&mut self, line_data: &LineData) -> Result<Rc<Line>, String> {
         let line = Rc::new(Line::new(line_data.name.clone(), line_data.stops.clone()));
@@ -25,8 +27,8 @@ impl Simulation {
                 node_b.get_lon(),
             );
 
-            self.graph.add_edge(a, b, distance_m);
-            self.graph.add_edge(b, a, distance_m);
+            self.graph.add_edge(a, b, distance_m, EDGE_MAX_CAPACITY);
+            self.graph.add_edge(b, a, distance_m, EDGE_MAX_CAPACITY);
             // println!(
             //     "{name_a} -> {name_b} distance {distance_m:.02} m traveled in {} s",
             //     fmt_time(time_distance)

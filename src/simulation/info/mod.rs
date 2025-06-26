@@ -34,6 +34,11 @@ pub enum InfoKind {
         unloaded_passengers: usize,
         train_capacity: usize,
     },
+    WaitingForEdge {
+        train_id: TrainId,
+        start_station_name: String,
+        end_station_name: String,
+    },
 }
 
 impl fmt::Display for Info {
@@ -76,6 +81,14 @@ impl fmt::Display for InfoKind {
             } => write!(
                 f,
                 "Train {train_id:?} line '{line_name}' [{total_passengers} (-{unloaded_passengers}) / {train_capacity}] arrive '{arriving_station_name}'"
+            ),
+            Self::WaitingForEdge {
+                train_id,
+                start_station_name,
+                end_station_name,
+            } => write!(
+                f, // TODO add line name
+                "Train {train_id:?} waiting on free space on edge from '{start_station_name}' to '{end_station_name}'"
             ),
         }
     }

@@ -1,20 +1,29 @@
 #[derive(Debug)]
 pub struct Edge {
     occupancy: usize,
-    // TODO add capacity
+    max_capacity: usize,
     distance: f64,
 }
 
 impl Edge {
-    pub fn new(distance: f64) -> Self {
+    pub fn new(distance: f64, max_capacity: usize) -> Self {
         Self {
             occupancy: 0,
+            max_capacity,
             distance,
         }
     }
 
-    pub fn train_enter(&mut self) {
-        self.occupancy += 1;
+    pub fn has_free_space(&self) -> bool {
+        self.occupancy < self.max_capacity
+    }
+
+    pub fn train_enter(&mut self) -> Result<usize, ()> {
+        if self.occupancy < self.max_capacity {
+            self.occupancy += 1;
+            return Ok(self.occupancy);
+        }
+        Err(())
     }
 
     pub fn train_exit(&mut self) -> Result<usize, ()> {
