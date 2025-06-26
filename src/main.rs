@@ -31,6 +31,8 @@ fn main() {
 
     system.add_train(30, &lines[0], 2, Left).unwrap();
     system.add_train(50, &lines[1], 3, Right).unwrap();
+    system.add_train(70, &lines[1], 2, Right).unwrap();
+    system.add_train(70, &lines[1], 2, Right).unwrap();
 
     simulate(system);
 }
