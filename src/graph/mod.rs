@@ -1,4 +1,4 @@
-use crate::train_lines::StationId;
+use crate::train_lines::{StationId, Time};
 use petgraph::graphmap::DiGraphMap;
 use std::collections::HashMap;
 use std::fmt;
@@ -11,8 +11,8 @@ use edge::Edge;
 use node::Station;
 
 pub struct Graph {
-    pub graph: DiGraphMap<StationId, Edge>,
-    pub stations: HashMap<StationId, Station>,
+    graph: DiGraphMap<StationId, Edge>,
+    stations: HashMap<StationId, Station>,
 }
 
 impl Graph {
@@ -44,8 +44,12 @@ impl Graph {
         self.graph.add_node(id);
     }
 
-    pub fn add_edge(&mut self, from: StationId, to: StationId) {
-        self.graph.add_edge(from, to, Edge::new());
+    pub fn add_edge(&mut self, from: StationId, to: StationId, distance: Time) {
+        self.graph.add_edge(from, to, Edge::new(distance));
+    }
+
+    pub fn get_nodes_len(&self) -> usize {
+        self.stations.len()
     }
 }
 

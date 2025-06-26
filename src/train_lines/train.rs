@@ -1,5 +1,7 @@
-use crate::train_lines::StationId;
-use crate::train_lines::train_line::{Direction, TrainLine};
+use crate::graph::node::Station;
+use crate::train_lines::line::Line;
+use crate::train_lines::{Direction, StationId};
+use rand::Rng;
 use std::rc::Rc;
 
 #[derive(Debug)]
@@ -7,15 +9,14 @@ pub struct Train {
     n_passenger: usize,
     max_passenger: usize,
 
-    line: Rc<TrainLine>,
+    line: Rc<Line>,
     pos_in_line: usize,
     direction: Direction,
-    // status: Status,
 }
 
 impl Train {
     pub fn new(
-        line: Rc<TrainLine>,
+        line: Rc<Line>,
         max_passenger: usize,
         pos_in_line: usize,
         direction: Direction,
@@ -26,8 +27,8 @@ impl Train {
             n_passenger: 0,
             max_passenger,
             line,
-            pos_in_line, // TODO
-            direction,   // TODO
+            pos_in_line,
+            direction,
         })
     }
 
@@ -75,5 +76,20 @@ impl Train {
         self.n_passenger += n_people;
         assert!(self.n_passenger <= self.max_passenger);
         Ok(())
+    }
+
+    pub fn unload_people_at_curr_station(&mut self, station: &Station) {
+        let n_people = rand::rng().random_range(0..=self.n_passenger);
+        self.n_passenger -= n_people;
+
+        for _ in 0..n_people {
+            if let Some(random_stop) = station.get_random_line_stop() {
+                random_stop.borrow_mut().person_enter(Direction::rand(), 1);
+            }
+        }
+    }
+
+    pub fn get_line_name(&self) -> String {
+        self.line.get_name()
     }
 }

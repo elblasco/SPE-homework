@@ -3,48 +3,60 @@ mod info;
 mod simulate;
 mod train_system;
 
+use crate::dataset::StationData;
 use crate::graph::Graph;
+use crate::graph::node::Station;
 pub use crate::simulation::event::{Event, EventKind};
-use crate::simulation::info::Info;
+use crate::train_lines::line::Line;
 use crate::train_lines::train::Train;
-use crate::train_lines::train_line::TrainLine;
 use crate::train_lines::{Time, TrainId};
 use std::collections::{BinaryHeap, HashMap};
 use std::fmt;
 use std::fmt::Debug;
 use std::rc::Rc;
 
+pub use info::InfoKind;
+
 pub struct Simulation {
     pub graph: Graph,
-    pub lines: Vec<Rc<TrainLine>>,
+    pub lines: Vec<Rc<Line>>,
     pub trains: HashMap<TrainId, Train>,
     pub next_train_id: TrainId,
 
-    pub info: Info,
+    //pub info: SystemInfo,
     events: BinaryHeap<Event>,
 }
 
 impl Simulation {
-    pub fn new(start_time: Time, end_time: Time) -> Self {
-        let mut events = BinaryHeap::new();
-        events.push(Event {
-            time: start_time,
-            kind: EventKind::Start,
-        });
-        events.push(Event {
-            time: end_time,
-            kind: EventKind::End,
-        });
-
-        Self {
+    pub fn new(start_time: Time, end_time: Time, stations: &[StationData]) -> Self {
+        let mut new = Self {
             graph: Graph::new(),
             lines: vec![],
             trains: HashMap::new(),
             next_train_id: 0,
+            //info: Info::SimulationStarted(),
+            events: Self::get_initial_events(start_time, end_time),
+        };
 
-            info: Info::default(),
-            events,
+        for (idx, data) in stations.iter().enumerate() {
+            new.graph
+                .add_node(idx, Station::new(&data.name, data.lat, data.lon));
         }
+
+        new
+    }
+
+    fn get_initial_events(start_time: Time, end_time: Time) -> BinaryHeap<Event> {
+        BinaryHeap::from([
+            Event {
+                time: start_time,
+                kind: EventKind::Start,
+            },
+            Event {
+                time: end_time,
+                kind: EventKind::End,
+            },
+        ])
     }
 
     pub fn peek_event(&self) -> Option<Event> {
