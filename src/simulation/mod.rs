@@ -10,20 +10,20 @@ pub use crate::simulation::event::{Event, EventKind};
 use crate::train_lines::line::Line;
 use crate::train_lines::train::Train;
 use crate::train_lines::{Time, TrainId};
+use crate::utils::time::{from_minutes, from_seconds};
+pub use info::InfoKind;
+use rand_distr::Exp;
 use std::collections::{BinaryHeap, HashMap};
 use std::fmt;
 use std::fmt::Debug;
 use std::rc::Rc;
 
-pub use info::InfoKind;
-
 pub struct Simulation {
-    pub graph: Graph,
-    pub lines: Vec<Rc<Line>>,
-    pub trains: HashMap<TrainId, Train>,
-    pub next_train_id: TrainId,
-
-    //pub info: SystemInfo,
+    graph: Graph,
+    lines: Vec<Rc<Line>>,
+    trains: HashMap<TrainId, Train>,
+    next_train_id: TrainId,
+    distr_train_at_station: Exp<Time>,
     events: BinaryHeap<Event>,
 }
 
@@ -34,13 +34,15 @@ impl Simulation {
             lines: vec![],
             trains: HashMap::new(),
             next_train_id: 0,
-            //info: Info::SimulationStarted(),
             events: Self::get_initial_events(start_time, end_time),
+            distr_train_at_station: Exp::new(1.0 / from_seconds(20.0)).unwrap(),
         };
 
         for (idx, data) in stations.iter().enumerate() {
-            new.graph
-                .add_node(idx, Station::new(&data.name, data.lat, data.lon));
+            new.graph.add_node(
+                idx,
+                Station::new(&data.name, data.lat, data.lon, from_minutes(1.0)),
+            );
         }
 
         new
@@ -59,8 +61,8 @@ impl Simulation {
         ])
     }
 
-    pub fn peek_event(&self) -> Option<Event> {
-        self.events.peek().cloned()
+    pub fn iter_trains(&self) -> impl Iterator<Item = &Train> {
+        self.trains.values()
     }
 }
 

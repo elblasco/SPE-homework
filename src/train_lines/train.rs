@@ -8,7 +8,6 @@ use std::rc::Rc;
 pub struct Train {
     n_passenger: usize,
     max_passenger: usize,
-
     line: Rc<Line>,
     pos_in_line: usize,
     direction: Direction,
@@ -54,17 +53,13 @@ impl Train {
         (self.pos_in_line, self.direction.reverse())
     }
 
-    pub fn get_pos_in_line(&self) -> usize {
-        self.pos_in_line
-    }
-
     pub fn go_next_stop(&mut self) {
         let (next_pos, next_dir) = self.get_next_position();
         self.pos_in_line = next_pos;
         self.direction = next_dir;
     }
 
-    pub fn load_people_at_curr_station(&mut self) -> Result<(), String> {
+    pub fn load_people_at_curr_station(&mut self) -> Result<usize, String> {
         let line_stop = self
             .line
             .get_stop(self.pos_in_line)
@@ -74,11 +69,11 @@ impl Train {
             .borrow_mut()
             .person_exit(self.direction, self.max_passenger - self.n_passenger);
         self.n_passenger += n_people;
-        assert!(self.n_passenger <= self.max_passenger);
-        Ok(())
+        // assert!(self.n_passenger <= self.max_passenger);
+        Ok(n_people)
     }
 
-    pub fn unload_people_at_curr_station(&mut self, station: &Station) {
+    pub fn unload_people_at_curr_station(&mut self, station: &Station) -> usize {
         let n_people = rand::rng().random_range(0..=self.n_passenger);
         self.n_passenger -= n_people;
 
@@ -87,9 +82,18 @@ impl Train {
                 random_stop.borrow_mut().person_enter(Direction::rand(), 1);
             }
         }
+        n_people
     }
 
     pub fn get_line_name(&self) -> String {
         self.line.get_name()
+    }
+
+    pub fn get_n_passengers(&self) -> usize {
+        self.n_passenger
+    }
+
+    pub fn get_max_passenger(&self) -> usize {
+        self.max_passenger
     }
 }

@@ -2,7 +2,6 @@
 #![warn(clippy::nursery)]
 #![warn(clippy::cargo)]
 #![allow(clippy::cargo_common_metadata)]
-#![allow(dead_code)]
 #![allow(clippy::missing_const_for_fn)]
 
 use crate::dataset::Dataset;
@@ -45,12 +44,12 @@ fn simulate(mut system: Simulation) {
 
         match result {
             Ok(info) => {
-                println!("LOG {} -> {:?}", fmt_time(info.time), info.kind);
+                println!("LOG {} -> {}", fmt_time(info.time), info.kind);
                 running = !matches!(info.kind, InfoKind::SimulationEnded());
             }
             Err(error) => {
                 println!("\n\nCORE DUMPED");
-                println!("{:?}", system.trains);
+                println!("{:?}", system.iter_trains().collect::<Vec<_>>());
                 println!("\n\nSIMULATION ERRORED OUT");
                 println!("{error}");
                 running = false;

@@ -1,8 +1,8 @@
 use crate::simulation::info::Info;
 use crate::simulation::{Event, EventKind, InfoKind, Simulation};
 use crate::train_lines::{Direction, StationId, Time, TrainId};
-use crate::utils::time::{from_minutes, from_seconds};
-use rand::Rng;
+use crate::utils::time::from_minutes;
+use rand_distr::Distribution;
 
 impl Simulation {
     pub fn simulation_step(&mut self) -> Result<Info, String> {
@@ -12,23 +12,7 @@ impl Simulation {
         } = self.events.pop().unwrap();
 
         let info_kind = match event_kind {
-            EventKind::Start => {
-                for id in self.trains.keys() {
-                    self.events.push(Event {
-                        time: 0.0,
-                        kind: EventKind::TrainDepart(*id),
-                    });
-                }
-
-                self.events.push(Event {
-                    time: time + from_seconds(5.0),
-                    kind: EventKind::PersonArrive(
-                        rand::rng().random_range(0..self.graph.get_nodes_len()),
-                    ),
-                });
-
-                InfoKind::SimulationStarted()
-            }
+            EventKind::Start => self.start_sim(time),
             EventKind::End => InfoKind::SimulationEnded(),
             EventKind::TrainArrive(train_id) => {
                 let (new_event, info) = self.train_arrive(time, train_id)?;
@@ -53,12 +37,35 @@ impl Simulation {
         })
     }
 
+    fn start_sim(&mut self, time: Time) -> InfoKind {
+        for id in self.trains.keys() {
+            self.events.push(Event {
+                time: time + self.distr_train_at_station.sample(&mut rand::rng()),
+                kind: EventKind::TrainDepart(*id),
+            });
+        }
+
+        let station_ids = self.graph.iter_station_id().copied().collect::<Vec<_>>();
+        for station_id in station_ids {
+            self.events.push(Event {
+                time: self
+                    .graph
+                    .get_node_mut(station_id)
+                    .unwrap()
+                    .get_next_time(time),
+                kind: EventKind::PersonArrive(station_id),
+            });
+        }
+
+        InfoKind::SimulationStarted()
+    }
+
     fn person_arrive(
         &mut self,
         time: Time,
         station_id: StationId,
     ) -> Result<(Event, InfoKind), String> {
-        let n_stations = self.graph.get_nodes_len();
+        // let n_stations = self.graph.get_nodes_len();
         let station = self
             .graph
             .get_node_mut(station_id)
@@ -75,8 +82,8 @@ impl Simulation {
 
         Ok((
             Event {
-                time: time + from_seconds(5.0),
-                kind: EventKind::PersonArrive(rand::rng().random_range(0..n_stations)),
+                time: station.get_next_time(time),
+                kind: EventKind::PersonArrive(station_id),
             },
             InfoKind::PersonArrived {
                 station_name: station.get_name(),
@@ -113,17 +120,22 @@ impl Simulation {
 
         train.go_next_stop();
         let curr_station = self.graph.get_node(end).ok_or("Station not found")?;
-        train.unload_people_at_curr_station(curr_station);
+
+        // TODO maybe we should do something with them
+        let unloaded_passengers = train.unload_people_at_curr_station(curr_station);
 
         Ok((
             Event {
-                time: arrival_time,
+                time: arrival_time + self.distr_train_at_station.sample(&mut rand::rng()),
                 kind: EventKind::TrainDepart(train_id),
             },
             InfoKind::TrainArrival {
                 train_id,
                 line_name: train.get_line_name(),
                 arriving_station_name: curr_station.get_name(),
+                unloaded_passengers,
+                total_passengers: train.get_n_passengers(),
+                train_capacity: train.get_max_passenger(),
             },
         ))
     }
@@ -137,7 +149,7 @@ impl Simulation {
         let start = train.get_curr_station();
         let (end, _) = train.get_next_station();
 
-        train.load_people_at_curr_station()?;
+        let loaded_passengers = train.load_people_at_curr_station()?;
 
         let arrival_time = if start == end {
             time + from_minutes(1.0)
@@ -170,6 +182,9 @@ impl Simulation {
                 train_id,
                 line_name: train.get_line_name(),
                 departing_station_name: curr_station.get_name(),
+                total_passengers: train.get_n_passengers(),
+                loaded_passengers,
+                train_capacity: train.get_max_passenger(),
             },
         ))
     }

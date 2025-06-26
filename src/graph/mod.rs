@@ -35,6 +35,7 @@ impl Graph {
         self.graph.edge_weight_mut(from, to)
     }
 
+    #[allow(dead_code)]
     pub fn get_edge(&self, from: StationId, to: StationId) -> Option<&Edge> {
         self.graph.edge_weight(from, to)
     }
@@ -48,8 +49,8 @@ impl Graph {
         self.graph.add_edge(from, to, Edge::new(distance));
     }
 
-    pub fn get_nodes_len(&self) -> usize {
-        self.stations.len()
+    pub(crate) fn iter_station_id(&self) -> impl Iterator<Item = &StationId> {
+        self.stations.keys()
     }
 }
 

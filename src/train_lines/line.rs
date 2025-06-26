@@ -47,17 +47,6 @@ impl Line {
         self.get(pos).map(|_| pos)
     }
 
-    pub fn person_enter(&self, pos: usize, dir: Direction, n: usize) -> Result<usize, ()> {
-        let stop = self.stops.get(pos).ok_or(())?;
-        Ok(stop.borrow_mut().person_enter(dir, n))
-    }
-
-    // Train may want to take up to n people
-    pub fn person_exit(&self, pos: usize, dir: Direction, n: usize) -> Result<usize, ()> {
-        let stop = self.stops.get(pos).ok_or(())?;
-        Ok(stop.borrow_mut().person_exit(dir, n))
-    }
-
     pub fn get_stop(&self, pos: usize) -> Option<&Rc<RefCell<LineStop>>> {
         self.stops.get(pos)
     }

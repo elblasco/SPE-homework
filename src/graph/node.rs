@@ -1,5 +1,7 @@
 use crate::train_lines::line_stop::LineStop;
 use rand::Rng;
+use rand_distr::Distribution;
+use rand_distr::Exp;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -10,21 +12,19 @@ pub struct Station {
     name: String,
     lat: f64,
     lon: f64,
+    distribution_arrive: Exp<f64>,
 }
 
 impl Station {
-    pub fn new(name: &str, lat: f64, lon: f64) -> Self {
+    pub fn new(name: &str, lat: f64, lon: f64, mean: f64) -> Self {
         Self {
             occupancy: 0,
             line_stops: Vec::default(),
             name: String::from(name),
             lat,
             lon,
+            distribution_arrive: Exp::new(1.0 / mean).unwrap(),
         }
-    }
-
-    pub fn get_line_stops(&self) -> &Vec<Rc<RefCell<LineStop>>> {
-        &self.line_stops
     }
 
     pub fn get_name(&self) -> String {
@@ -62,5 +62,9 @@ impl Station {
 
     pub fn add_line_stop(&mut self, new_train_line: Rc<RefCell<LineStop>>) {
         self.line_stops.push(new_train_line);
+    }
+
+    pub fn get_next_time(&self, current_time: f64) -> f64 {
+        current_time + self.distribution_arrive.sample(&mut rand::rng())
     }
 }
