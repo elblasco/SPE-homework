@@ -1,7 +1,7 @@
 use crate::simulation::info::Info;
 use crate::simulation::{Event, EventKind, InfoKind, Simulation};
 use crate::train_lines::{Direction, StationId, Time, TrainId};
-use crate::utils::time::from_minutes;
+use crate::utils::time::{from_minutes, from_seconds};
 use rand_distr::Distribution;
 
 impl Simulation {
@@ -102,7 +102,7 @@ impl Simulation {
         let start = train.get_curr_station();
         let (end, _) = train.get_next_station();
 
-        let arrival_time = if start == end {
+        let departure_time = if start == end {
             time + from_minutes(1.0)
         } else {
             let curr_station = self.graph.get_node_mut(end).ok_or("Station not found")?;
@@ -115,24 +115,24 @@ impl Simulation {
             edge.train_exit()
                 .map_err(|()| "Cannot remove train because already 0 on edge")?;
 
-            time + edge.get_distance()
+            time + self.distr_train_at_station.sample(&mut rand::rng())
         };
 
         train.go_next_stop();
-        let curr_station = self.graph.get_node(end).ok_or("Station not found")?;
+        let arrival_station = self.graph.get_node(end).ok_or("Station not found")?;
 
         // TODO maybe we should do something with them
-        let unloaded_passengers = train.unload_people_at_curr_station(curr_station);
+        let unloaded_passengers = train.unload_people_at_curr_station(arrival_station);
 
         Ok((
             Event {
-                time: arrival_time + self.distr_train_at_station.sample(&mut rand::rng()),
+                time: departure_time,
                 kind: EventKind::TrainDepart(train_id),
             },
             InfoKind::TrainArrival {
                 train_id,
                 line_name: train.get_line_name(),
-                arriving_station_name: curr_station.get_name(),
+                arriving_station_name: arrival_station.get_name(),
                 unloaded_passengers,
                 total_passengers: train.get_n_passengers(),
                 train_capacity: train.get_max_passenger(),
@@ -168,10 +168,11 @@ impl Simulation {
                 .get_edge_mut(start, end)
                 .ok_or("Edge doesn't exist")?;
             edge.train_enter();
-            time + edge.get_distance()
+
+            time + from_seconds(edge.get_distance_m() / (train.get_speed_m_s() / 3.6))
         };
 
-        let curr_station = self.graph.get_node(end).ok_or("Station not found")?;
+        let departure_station = self.graph.get_node(start).ok_or("Station not found")?;
 
         Ok((
             Event {
@@ -181,7 +182,7 @@ impl Simulation {
             InfoKind::TrainDeparture {
                 train_id,
                 line_name: train.get_line_name(),
-                departing_station_name: curr_station.get_name(),
+                departing_station_name: departure_station.get_name(),
                 total_passengers: train.get_n_passengers(),
                 loaded_passengers,
                 train_capacity: train.get_max_passenger(),

@@ -64,7 +64,7 @@ impl fmt::Display for InfoKind {
                 train_capacity,
             } => write!(
                 f,
-                "Train {train_id:?} departed from '{departing_station_name}' on line '{line_name}'. Loaded: {loaded_passengers}, Total: {total_passengers}, Capacity: {train_capacity}"
+                "Train {train_id:?} line '{line_name}' [{total_passengers} (+{loaded_passengers}) / {train_capacity}] depart '{departing_station_name}'"
             ),
             Self::TrainArrival {
                 train_id,
@@ -75,7 +75,7 @@ impl fmt::Display for InfoKind {
                 train_capacity,
             } => write!(
                 f,
-                "Train {train_id:?} arrived at '{arriving_station_name}' on line '{line_name}'. Unloaded: {unloaded_passengers}, Total: {total_passengers}, Capacity: {train_capacity}"
+                "Train {train_id:?} line '{line_name}' [{total_passengers} (-{unloaded_passengers}) / {train_capacity}] arrive '{arriving_station_name}'"
             ),
         }
     }

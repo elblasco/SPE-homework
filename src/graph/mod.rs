@@ -1,4 +1,4 @@
-use crate::train_lines::{StationId, Time};
+use crate::train_lines::StationId;
 use petgraph::graphmap::DiGraphMap;
 use std::collections::HashMap;
 use std::fmt;
@@ -45,7 +45,7 @@ impl Graph {
         self.graph.add_node(id);
     }
 
-    pub fn add_edge(&mut self, from: StationId, to: StationId, distance: Time) {
+    pub fn add_edge(&mut self, from: StationId, to: StationId, distance: f64) {
         self.graph.add_edge(from, to, Edge::new(distance));
     }
 

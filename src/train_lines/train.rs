@@ -2,6 +2,8 @@ use crate::graph::node::Station;
 use crate::train_lines::line::Line;
 use crate::train_lines::{Direction, StationId};
 use rand::Rng;
+use rand_distr::Distribution;
+use rand_distr::Normal;
 use std::rc::Rc;
 
 #[derive(Debug)]
@@ -11,9 +13,14 @@ pub struct Train {
     line: Rc<Line>,
     pos_in_line: usize,
     direction: Direction,
+    speed_distribution: Normal<f64>,
 }
 
 impl Train {
+    // The average speed is 32.5 km/h accordin to:
+    // https://homepage.univie.ac.at/horst.prillinger/ubahn/english/facts.html
+    const AVERAGE_SPEED_MS: f64 = 32.5;
+
     pub fn new(
         line: Rc<Line>,
         max_passenger: usize,
@@ -28,6 +35,7 @@ impl Train {
             line,
             pos_in_line,
             direction,
+            speed_distribution: Normal::new(Self::AVERAGE_SPEED_MS, 1.0).unwrap(),
         })
     }
 
@@ -95,5 +103,9 @@ impl Train {
 
     pub fn get_max_passenger(&self) -> usize {
         self.max_passenger
+    }
+
+    pub fn get_speed_m_s(&self) -> f64 {
+        self.speed_distribution.sample(&mut rand::rng())
     }
 }

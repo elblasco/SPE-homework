@@ -1,14 +1,12 @@
-use crate::train_lines::Time;
-
 #[derive(Debug)]
 pub struct Edge {
     occupancy: usize,
     // TODO add capacity
-    distance: Time,
+    distance: f64,
 }
 
 impl Edge {
-    pub fn new(distance: Time) -> Self {
+    pub fn new(distance: f64) -> Self {
         Self {
             occupancy: 0,
             distance,
@@ -27,7 +25,7 @@ impl Edge {
         Err(())
     }
 
-    pub fn get_distance(&self) -> Time {
+    pub fn get_distance_m(&self) -> f64 {
         self.distance
     }
 }

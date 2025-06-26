@@ -2,14 +2,9 @@ use crate::dataset::LineData;
 use crate::simulation::Simulation;
 use crate::train_lines::line::Line;
 use crate::train_lines::train::Train;
-use crate::train_lines::{Direction, Time, TrainId};
-use crate::utils::time::from_seconds;
+use crate::train_lines::{Direction, TrainId};
 use itertools::Itertools;
 use std::rc::Rc;
-
-// The average speed is 32.5 km/h accordin to:
-// https://homepage.univie.ac.at/horst.prillinger/ubahn/english/facts.html
-const TRAIN_SPEED_MS: f64 = 32.5;
 
 impl Simulation {
     pub fn add_line(&mut self, line_data: &LineData) -> Result<Rc<Line>, String> {
@@ -30,10 +25,8 @@ impl Simulation {
                 node_b.get_lon(),
             );
 
-            let time_distance: Time = from_seconds(distance_m / (TRAIN_SPEED_MS / 3.6));
-
-            self.graph.add_edge(a, b, time_distance);
-            self.graph.add_edge(b, a, time_distance);
+            self.graph.add_edge(a, b, distance_m);
+            self.graph.add_edge(b, a, distance_m);
             // println!(
             //     "{name_a} -> {name_b} distance {distance_m:.02} m traveled in {} s",
             //     fmt_time(time_distance)

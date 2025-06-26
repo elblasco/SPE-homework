@@ -6,7 +6,7 @@
 
 use crate::dataset::Dataset;
 use crate::simulation::{InfoKind, Simulation};
-use crate::train_lines::Direction;
+use crate::train_lines::Direction::{Left, Right};
 use crate::utils::time::{fmt_time, from_minutes};
 use std::fs::File;
 
@@ -29,8 +29,8 @@ fn main() {
         lines.push(new_line);
     }
 
-    system.add_train(3, &lines[0], 2, Direction::Left).unwrap();
-    system.add_train(5, &lines[1], 3, Direction::Right).unwrap();
+    system.add_train(30, &lines[0], 2, Left).unwrap();
+    system.add_train(50, &lines[1], 3, Right).unwrap();
 
     simulate(system);
 }
