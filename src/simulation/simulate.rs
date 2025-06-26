@@ -2,7 +2,8 @@ use crate::simulation::info::Info;
 use crate::simulation::{Event, EventKind, InfoKind, Simulation};
 use crate::train_lines::{Direction, StationId, Time, TrainId};
 use crate::utils::time::{from_minutes, from_seconds};
-use rand::Rng;
+use rand_distr::Distribution;
+use std::collections::VecDeque;
 
 impl Simulation {
     pub fn simulation_step(&mut self) -> Result<Info, String> {
@@ -12,32 +13,18 @@ impl Simulation {
         } = self.events.pop().unwrap();
 
         let info_kind = match event_kind {
-            EventKind::Start => {
-                for id in self.trains.keys() {
-                    self.events.push(Event {
-                        time: 0.0,
-                        kind: EventKind::TrainDepart(*id),
-                    });
-                }
-
-                self.events.push(Event {
-                    time: time + from_seconds(5.0),
-                    kind: EventKind::PersonArrive(
-                        rand::rng().random_range(0..self.graph.get_nodes_len()),
-                    ),
-                });
-
-                InfoKind::SimulationStarted()
-            }
+            EventKind::Start => self.start_sim(time),
             EventKind::End => InfoKind::SimulationEnded(),
             EventKind::TrainArrive(train_id) => {
                 let (new_event, info) = self.train_arrive(time, train_id)?;
-                self.events.push(new_event);
+                self.events.extend(new_event);
                 info
             }
             EventKind::TrainDepart(train_id) => {
                 let (new_event, info) = self.train_depart(time, train_id)?;
-                self.events.push(new_event);
+                if let Some(new_event) = new_event {
+                    self.events.push(new_event);
+                }
                 info
             }
             EventKind::PersonArrive(station_id) => {
@@ -53,12 +40,35 @@ impl Simulation {
         })
     }
 
+    fn start_sim(&mut self, time: Time) -> InfoKind {
+        for id in self.trains.keys() {
+            self.events.push(Event {
+                time: time + self.distr_train_at_station.sample(&mut rand::rng()),
+                kind: EventKind::TrainDepart(*id),
+            });
+        }
+
+        let station_ids = self.graph.iter_station_id().copied().collect::<Vec<_>>();
+        for station_id in station_ids {
+            self.events.push(Event {
+                time: self
+                    .graph
+                    .get_node_mut(station_id)
+                    .unwrap()
+                    .get_next_time(time),
+                kind: EventKind::PersonArrive(station_id),
+            });
+        }
+
+        InfoKind::SimulationStarted()
+    }
+
     fn person_arrive(
         &mut self,
         time: Time,
         station_id: StationId,
     ) -> Result<(Event, InfoKind), String> {
-        let n_stations = self.graph.get_nodes_len();
+        // let n_stations = self.graph.get_nodes_len();
         let station = self
             .graph
             .get_node_mut(station_id)
@@ -75,8 +85,8 @@ impl Simulation {
 
         Ok((
             Event {
-                time: time + from_seconds(5.0),
-                kind: EventKind::PersonArrive(rand::rng().random_range(0..n_stations)),
+                time: station.get_next_time(time),
+                kind: EventKind::PersonArrive(station_id),
             },
             InfoKind::PersonArrived {
                 station_name: station.get_name(),
@@ -86,7 +96,11 @@ impl Simulation {
         ))
     }
 
-    fn train_arrive(&mut self, time: Time, train_id: TrainId) -> Result<(Event, InfoKind), String> {
+    fn train_arrive(
+        &mut self,
+        time: Time,
+        train_id: TrainId,
+    ) -> Result<(Vec<Event>, InfoKind), String> {
         let train = self
             .trains
             .get_mut(&train_id)
@@ -95,7 +109,7 @@ impl Simulation {
         let start = train.get_curr_station();
         let (end, _) = train.get_next_station();
 
-        let arrival_time = if start == end {
+        let departure_time = if start == end {
             time + from_minutes(1.0)
         } else {
             let curr_station = self.graph.get_node_mut(end).ok_or("Station not found")?;
@@ -108,27 +122,46 @@ impl Simulation {
             edge.train_exit()
                 .map_err(|()| "Cannot remove train because already 0 on edge")?;
 
-            time + edge.get_distance()
+            time + self.distr_train_at_station.sample(&mut rand::rng())
         };
 
         train.go_next_stop();
-        let curr_station = self.graph.get_node(end).ok_or("Station not found")?;
-        train.unload_people_at_curr_station(curr_station);
+        let arrival_station = self.graph.get_node(end).ok_or("Station not found")?;
+        // TODO maybe we should do something with them
+        let unloaded_passengers = train.unload_people_at_curr_station(arrival_station);
+
+        let mut events = vec![Event {
+            time: departure_time,
+            kind: EventKind::TrainDepart(train_id),
+        }];
+        let train_freed = self
+            .train_waiting
+            .get_mut(&(start, end))
+            .and_then(VecDeque::pop_front)
+            .map(|train_id| Event {
+                time,
+                kind: EventKind::TrainDepart(train_id),
+            });
+        events.extend(train_freed);
 
         Ok((
-            Event {
-                time: arrival_time,
-                kind: EventKind::TrainDepart(train_id),
-            },
+            events,
             InfoKind::TrainArrival {
                 train_id,
                 line_name: train.get_line_name(),
-                arriving_station_name: curr_station.get_name(),
+                arriving_station_name: arrival_station.get_name(),
+                unloaded_passengers,
+                total_passengers: train.get_n_passengers(),
+                train_capacity: train.get_max_passenger(),
             },
         ))
     }
 
-    fn train_depart(&mut self, time: Time, train_id: TrainId) -> Result<(Event, InfoKind), String> {
+    fn train_depart(
+        &mut self,
+        time: Time,
+        train_id: TrainId,
+    ) -> Result<(Option<Event>, InfoKind), String> {
         let train = self
             .trains
             .get_mut(&train_id)
@@ -137,11 +170,42 @@ impl Simulation {
         let start = train.get_curr_station();
         let (end, _) = train.get_next_station();
 
-        train.load_people_at_curr_station()?;
+        let loaded_passengers = train.load_people_at_curr_station()?;
 
         let arrival_time = if start == end {
             time + from_minutes(1.0)
         } else {
+            let edge = self
+                .graph
+                .get_edge(start, end)
+                .ok_or("Edge doesn't exist")?;
+
+            if !edge.has_free_space() {
+                let start_station = self
+                    .graph
+                    .get_node(start)
+                    .ok_or("Current station doesn't exist")?;
+
+                let end_station = self
+                    .graph
+                    .get_node(end)
+                    .ok_or("Current station doesn't exist")?;
+
+                self.train_waiting
+                    .entry((start, end))
+                    .or_default()
+                    .push_back(train_id);
+
+                return Ok((
+                    None,
+                    InfoKind::WaitingForEdge {
+                        train_id,
+                        start_station_name: start_station.get_name(),
+                        end_station_name: end_station.get_name(),
+                    },
+                ));
+            }
+
             let curr_station = self
                 .graph
                 .get_node_mut(start)
@@ -155,21 +219,26 @@ impl Simulation {
                 .graph
                 .get_edge_mut(start, end)
                 .ok_or("Edge doesn't exist")?;
-            edge.train_enter();
-            time + edge.get_distance()
+
+            edge.train_enter()
+                .map_err(|()| "Cannot instert train because already full on node")?;
+            time + from_seconds(edge.get_distance_m() / (train.get_speed_m_s() / 3.6))
         };
 
-        let curr_station = self.graph.get_node(end).ok_or("Station not found")?;
+        let departure_station = self.graph.get_node(start).ok_or("Station not found")?;
 
         Ok((
-            Event {
+            Some(Event {
                 time: arrival_time,
                 kind: EventKind::TrainArrive(train_id),
-            },
+            }),
             InfoKind::TrainDeparture {
                 train_id,
                 line_name: train.get_line_name(),
-                departing_station_name: curr_station.get_name(),
+                departing_station_name: departure_station.get_name(),
+                total_passengers: train.get_n_passengers(),
+                loaded_passengers,
+                train_capacity: train.get_max_passenger(),
             },
         ))
     }

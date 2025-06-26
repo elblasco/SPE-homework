@@ -42,6 +42,7 @@ impl LineStop {
         n_to_exit
     }
 
+    #[allow(dead_code)]
     pub fn get_people_on_platform(&self, dir: Direction) -> usize {
         match dir {
             Direction::Left => self.people_going_left,

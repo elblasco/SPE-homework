@@ -2,12 +2,11 @@
 #![warn(clippy::nursery)]
 #![warn(clippy::cargo)]
 #![allow(clippy::cargo_common_metadata)]
-#![allow(dead_code)]
 #![allow(clippy::missing_const_for_fn)]
 
 use crate::dataset::Dataset;
 use crate::simulation::{InfoKind, Simulation};
-use crate::train_lines::Direction;
+use crate::train_lines::Direction::{Left, Right};
 use crate::utils::time::{fmt_time, from_minutes};
 use std::fs::File;
 
@@ -30,8 +29,10 @@ fn main() {
         lines.push(new_line);
     }
 
-    system.add_train(3, &lines[0], 2, Direction::Left).unwrap();
-    system.add_train(5, &lines[1], 3, Direction::Right).unwrap();
+    system.add_train(30, &lines[0], 2, Left).unwrap();
+    system.add_train(50, &lines[1], 3, Right).unwrap();
+    system.add_train(70, &lines[1], 2, Right).unwrap();
+    system.add_train(70, &lines[1], 2, Right).unwrap();
 
     simulate(system);
 }
@@ -45,12 +46,12 @@ fn simulate(mut system: Simulation) {
 
         match result {
             Ok(info) => {
-                println!("LOG {} -> {:?}", fmt_time(info.time), info.kind);
+                println!("LOG {} -> {}", fmt_time(info.time), info.kind);
                 running = !matches!(info.kind, InfoKind::SimulationEnded());
             }
             Err(error) => {
                 println!("\n\nCORE DUMPED");
-                println!("{:?}", system.trains);
+                println!("{:?}", system.iter_trains().collect::<Vec<_>>());
                 println!("\n\nSIMULATION ERRORED OUT");
                 println!("{error}");
                 running = false;

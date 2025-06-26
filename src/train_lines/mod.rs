@@ -6,7 +6,6 @@ pub mod train;
 
 pub type StationId = usize;
 pub type TrainId = u32;
-pub type LineId = u32;
 pub type Time = f64;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]

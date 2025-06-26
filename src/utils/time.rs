@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::train_lines::Time;
 
 pub fn from_hour(hour: f64) -> Time {
