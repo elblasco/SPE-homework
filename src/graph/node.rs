@@ -1,8 +1,8 @@
+use crate::train_lines::Direction;
 use crate::train_lines::line::Line;
 use crate::train_lines::line_stop::LineStop;
-use crate::train_lines::Direction;
-use rand::prelude::SliceRandom;
 use rand::Rng;
+use rand::prelude::SliceRandom;
 use rand_distr::Distribution;
 use rand_distr::Exp;
 use std::cell::RefCell;
