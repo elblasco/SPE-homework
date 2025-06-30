@@ -1,3 +1,4 @@
+use crate::simulation::event::SnapshotKind;
 use crate::train_lines::{Direction, Time, TrainId};
 use std::fmt;
 
@@ -16,6 +17,7 @@ pub enum InfoKind {
         line_name: String,
         direction: Direction,
     },
+    TimedSnapshot(SnapshotKind),
     TrainDeparture {
         train_id: TrainId,
         line_name: String,
@@ -89,6 +91,10 @@ impl fmt::Display for InfoKind {
             } => write!(
                 f, // TODO add line name
                 "Train {train_id:?} waiting on free space on edge from '{start_station_name}' to '{end_station_name}'"
+            ),
+            InfoKind::TimedSnapshot(kind) => write!(
+                f, // TODO add line name
+                "Timed Snapshot: {kind:?}"
             ),
         }
     }

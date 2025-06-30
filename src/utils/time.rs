@@ -1,15 +1,15 @@
 #![allow(dead_code)]
 use crate::train_lines::Time;
 
-pub fn from_hour(hour: f64) -> Time {
+pub const fn from_hour(hour: f64) -> Time {
     hour
 }
 
-pub fn from_minutes(minutes: f64) -> Time {
+pub const fn from_minutes(minutes: f64) -> Time {
     minutes / 60.0
 }
 
-pub fn from_seconds(seconds: f64) -> Time {
+pub const fn from_seconds(seconds: f64) -> Time {
     seconds / 3600.0
 }
 

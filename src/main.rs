@@ -7,11 +7,12 @@
 use crate::dataset::Dataset;
 use crate::simulation::{InfoKind, Simulation};
 use crate::train_lines::Direction::{Left, Right};
-use crate::utils::time::{fmt_time, from_minutes};
+use crate::utils::time::{fmt_time, from_hour};
 use std::fs::File;
 
 mod dataset;
 mod graph;
+mod logger;
 mod simulation;
 mod train_lines;
 mod utils;
@@ -21,7 +22,7 @@ fn main() {
     let dataset =
         serde_json::from_reader::<File, Dataset>(file).expect("JSON was not well-formatted");
 
-    let mut system = Simulation::new(0.0, from_minutes(60.0), &dataset.stations);
+    let mut system = Simulation::new(0.0, from_hour(24.0), &dataset.stations);
 
     let mut lines = vec![];
     for data in &dataset.lines {
@@ -46,7 +47,12 @@ fn simulate(mut system: Simulation) {
 
         match result {
             Ok(info) => {
-                println!("LOG {} -> {}", fmt_time(info.time), info.kind);
+                match info.kind {
+                    InfoKind::PersonArrived { .. } | InfoKind::TimedSnapshot { .. } => {}
+                    _ => {
+                        println!("LOG {} -> {}", fmt_time(info.time), info.kind);
+                    }
+                }
                 running = !matches!(info.kind, InfoKind::SimulationEnded());
             }
             Err(error) => {

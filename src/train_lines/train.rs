@@ -1,6 +1,6 @@
 use crate::graph::node::Station;
 use crate::train_lines::line::Line;
-use crate::train_lines::{Direction, StationId};
+use crate::train_lines::{Direction, StationId, Time};
 use rand::Rng;
 use rand_distr::Distribution;
 use rand_distr::Normal;
@@ -14,12 +14,15 @@ pub struct Train {
     pos_in_line: usize,
     direction: Direction,
     speed_distribution: Normal<f64>,
+    depart_time: Time,
 }
 
 impl Train {
     // The average speed is 32.5 km/h accordin to:
     // https://homepage.univie.ac.at/horst.prillinger/ubahn/english/facts.html
-    const AVERAGE_SPEED_MS: f64 = 32.5;
+    pub const AVG_SPEED_M_S: f64 = 30.0 / 3.6;
+    pub const MAX_SPEED_M_S: f64 = 50.0 / 3.6;
+    pub const MIN_SPEED_M_S: f64 = 10.0 / 3.6;
 
     pub fn new(
         line: Rc<Line>,
@@ -35,7 +38,8 @@ impl Train {
             line,
             pos_in_line,
             direction,
-            speed_distribution: Normal::new(Self::AVERAGE_SPEED_MS, 1.0).unwrap(),
+            speed_distribution: Normal::new(Self::AVG_SPEED_M_S, 0.5).unwrap(),
+            depart_time: 0.0,
         })
     }
 
@@ -61,6 +65,10 @@ impl Train {
         (self.pos_in_line, self.direction.reverse())
     }
 
+    fn is_next_dir_changing(&self) -> bool {
+        self.get_next_position().1 != self.direction
+    }
+
     pub fn go_next_stop(&mut self) {
         let (next_pos, next_dir) = self.get_next_position();
         self.pos_in_line = next_pos;
@@ -82,14 +90,15 @@ impl Train {
     }
 
     pub fn unload_people_at_curr_station(&mut self, station: &Station) -> usize {
-        let n_people = rand::rng().random_range(0..=self.n_passenger);
+        let n_people = if self.is_next_dir_changing() {
+            self.n_passenger
+        } else {
+            rand::rng().random_range(0..=self.n_passenger)
+        };
+
         self.n_passenger -= n_people;
 
-        for _ in 0..n_people {
-            if let Some(random_stop) = station.get_random_line_stop() {
-                random_stop.borrow_mut().person_enter(Direction::rand(), 1);
-            }
-        }
+        station.deploy_people(n_people, Rc::clone(&self.line));
         n_people
     }
 
@@ -106,6 +115,16 @@ impl Train {
     }
 
     pub fn get_speed_m_s(&self) -> f64 {
-        self.speed_distribution.sample(&mut rand::rng())
+        self.speed_distribution
+            .sample(&mut rand::rng())
+            .clamp(Self::MIN_SPEED_M_S, Self::MAX_SPEED_M_S)
+    }
+
+    pub fn set_depart_time(&mut self, depart_time: Time) {
+        self.depart_time = depart_time;
+    }
+
+    pub fn get_depart_time(&self) -> Time {
+        self.depart_time
     }
 }

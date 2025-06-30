@@ -2,9 +2,15 @@ use crate::train_lines::{StationId, Time, TrainId};
 use std::cmp::Ordering;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
+pub enum SnapshotKind {
+    PeopleInStation,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub enum EventKind {
     Start,
     End,
+    TimedSnapshot(SnapshotKind),
     TrainArrive(TrainId),
     TrainDepart(TrainId),
     PersonArrive(StationId),

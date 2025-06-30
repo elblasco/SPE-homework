@@ -1,4 +1,7 @@
+use crate::train_lines::line::Line;
 use crate::train_lines::line_stop::LineStop;
+use crate::train_lines::Direction;
+use rand::prelude::SliceRandom;
 use rand::Rng;
 use rand_distr::Distribution;
 use rand_distr::Exp;
@@ -60,11 +63,45 @@ impl Station {
         self.line_stops.get(rand).map(Rc::clone)
     }
 
+    //n_people: poeple descent from metro
+    pub fn deploy_people(&self, n_people: usize, descending_from: Rc<Line>) {
+        if self.line_stops.len() <= 1 {
+            // All people get out of the metro
+            // TODO change rate of descent
+            return;
+        }
+        let mut people_not_exited = rand::random_range(0..=n_people);
+        let mut stops = self.line_stops.clone();
+        stops.shuffle(&mut rand::rng());
+        for stop in stops.iter() {
+            if stop.borrow().get_line_name() == descending_from.get_name() {
+                continue;
+            }
+
+            let people_for_curr_stop = rand::random_range(0..=people_not_exited);
+            people_not_exited -= people_for_curr_stop;
+            if people_for_curr_stop > 0 {
+                stop.borrow_mut()
+                    .person_enter(Direction::rand(), people_for_curr_stop);
+            }
+        }
+    }
+
     pub fn add_line_stop(&mut self, new_train_line: Rc<RefCell<LineStop>>) {
         self.line_stops.push(new_train_line);
     }
 
     pub fn get_next_time(&self, current_time: f64) -> f64 {
         current_time + self.distribution_arrive.sample(&mut rand::rng())
+    }
+
+    pub fn get_n_people(&self) -> usize {
+        self.line_stops
+            .iter()
+            .map(|line_stop| {
+                line_stop.borrow().get_people_on_platform(Direction::Left)
+                    + line_stop.borrow().get_people_on_platform(Direction::Right)
+            })
+            .sum()
     }
 }

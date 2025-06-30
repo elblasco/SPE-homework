@@ -1,9 +1,12 @@
+use crate::simulation::event::SnapshotKind;
 use crate::simulation::info::Info;
 use crate::simulation::{Event, EventKind, InfoKind, Simulation};
+use crate::train_lines::train::Train;
 use crate::train_lines::{Direction, StationId, Time, TrainId};
 use crate::utils::time::{from_minutes, from_seconds};
 use rand_distr::Distribution;
 use std::collections::VecDeque;
+use std::io::Write;
 
 impl Simulation {
     pub fn simulation_step(&mut self) -> Result<Info, String> {
@@ -32,6 +35,11 @@ impl Simulation {
                 self.events.push(new_event);
                 info
             }
+            EventKind::TimedSnapshot(kind) => {
+                let new_event = self.snapshot(time, kind.clone())?;
+                self.events.push(new_event);
+                InfoKind::TimedSnapshot(kind)
+            }
         };
 
         Ok(Info {
@@ -41,12 +49,21 @@ impl Simulation {
     }
 
     fn start_sim(&mut self, time: Time) -> InfoKind {
-        for id in self.trains.keys() {
+        for (id, train) in &mut self.trains {
+            let depart_time = time + self.distr_train_at_station.sample(&mut rand::rng());
+
+            train.set_depart_time(depart_time);
+
             self.events.push(Event {
-                time: time + self.distr_train_at_station.sample(&mut rand::rng()),
+                time: depart_time,
                 kind: EventKind::TrainDepart(*id),
             });
         }
+
+        self.events.push(Event {
+            time: Simulation::TIME_BETWEEN_SNAPSHOT,
+            kind: EventKind::TimedSnapshot(SnapshotKind::PeopleInStation),
+        });
 
         let station_ids = self.graph.iter_station_id().copied().collect::<Vec<_>>();
         for station_id in station_ids {
@@ -96,6 +113,38 @@ impl Simulation {
         ))
     }
 
+    fn snapshot(&self, time: Time, snapshot_kind: SnapshotKind) -> Result<Event, String> {
+        match snapshot_kind {
+            SnapshotKind::PeopleInStation => {
+                let mut tot = 0;
+                for line in self.lines.iter() {
+                    let n_people = line.get_n_people();
+                    tot += n_people;
+
+                    write!(
+                        &self.logger.people_in_stations,
+                        "{}, {}, {}\n",
+                        time,
+                        n_people,
+                        line.get_name()
+                    )
+                    .expect("Cannot write to log");
+                }
+                write!(
+                    &self.logger.people_in_stations,
+                    "{}, {}, All lines\n",
+                    time, tot
+                )
+                .expect("Cannot write to log");
+            }
+        }
+
+        Ok(Event {
+            time: time + Simulation::TIME_BETWEEN_SNAPSHOT,
+            kind: EventKind::TimedSnapshot(snapshot_kind),
+        })
+    }
+
     fn train_arrive(
         &mut self,
         time: Time,
@@ -143,6 +192,7 @@ impl Simulation {
                 kind: EventKind::TrainDepart(train_id),
             });
         events.extend(train_freed);
+        train.set_depart_time(departure_time);
 
         Ok((
             events,
@@ -222,7 +272,17 @@ impl Simulation {
 
             edge.train_enter()
                 .map_err(|()| "Cannot instert train because already full on node")?;
-            time + from_seconds(edge.get_distance_m() / (train.get_speed_m_s() / 3.6))
+
+            let arrival = time + from_seconds(edge.get_distance_m() / (train.get_speed_m_s()));
+            write!(
+                self.logger.delay,
+                "{}, {}, {}\n",
+                from_seconds(edge.get_distance_m() / Train::AVG_SPEED_M_S) * 3600.0,
+                (arrival - train.get_depart_time()) * 3600.0,
+                train.get_line_name()
+            )
+            .expect("Cannot write to log");
+            arrival
         };
 
         let departure_station = self.graph.get_node(start).ok_or("Station not found")?;

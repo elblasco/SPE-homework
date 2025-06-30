@@ -5,6 +5,7 @@ auto/
 .idea/
 .venv/
 .fleet/
+*.csv
 
 # Latex temp files
 *.aux
