@@ -98,7 +98,7 @@ impl Train {
 
         self.n_passenger -= n_people;
 
-        station.deploy_people(n_people, Rc::clone(&self.line));
+        station.deploy_people(n_people, &self.line);
         n_people
     }
 

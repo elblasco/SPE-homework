@@ -18,8 +18,8 @@ impl Logger {
     }
 
     fn print_headers(&mut self) {
-        write!(self.delay, "Expected Time, Real Time, Line Name\n").expect("Cannot write to log");
-        write!(self.people_in_stations, "Time, People, Station Name\n")
+        writeln!(self.delay, "Expected Time, Real Time, Line Name").expect("Cannot write to log");
+        writeln!(self.people_in_stations, "Time, People, Station Name")
             .expect("Cannot write to log");
     }
 }

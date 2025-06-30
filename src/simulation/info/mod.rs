@@ -92,7 +92,7 @@ impl fmt::Display for InfoKind {
                 f, // TODO add line name
                 "Train {train_id:?} waiting on free space on edge from '{start_station_name}' to '{end_station_name}'"
             ),
-            InfoKind::TimedSnapshot(kind) => write!(
+            Self::TimedSnapshot(kind) => write!(
                 f, // TODO add line name
                 "Timed Snapshot: {kind:?}"
             ),

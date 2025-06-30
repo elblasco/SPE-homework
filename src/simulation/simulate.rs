@@ -36,7 +36,7 @@ impl Simulation {
                 info
             }
             EventKind::TimedSnapshot(kind) => {
-                let new_event = self.snapshot(time, kind.clone())?;
+                let new_event = self.snapshot(time, kind.clone());
                 self.events.push(new_event);
                 InfoKind::TimedSnapshot(kind)
             }
@@ -61,7 +61,7 @@ impl Simulation {
         }
 
         self.events.push(Event {
-            time: Simulation::TIME_BETWEEN_SNAPSHOT,
+            time: Self::TIME_BETWEEN_SNAPSHOT,
             kind: EventKind::TimedSnapshot(SnapshotKind::PeopleInStation),
         });
 
@@ -113,36 +113,30 @@ impl Simulation {
         ))
     }
 
-    fn snapshot(&self, time: Time, snapshot_kind: SnapshotKind) -> Result<Event, String> {
+    fn snapshot(&self, time: Time, snapshot_kind: SnapshotKind) -> Event {
         match snapshot_kind {
             SnapshotKind::PeopleInStation => {
                 let mut tot = 0;
-                for line in self.lines.iter() {
+                for line in &self.lines {
                     let n_people = line.get_n_people();
                     tot += n_people;
 
-                    write!(
+                    writeln!(
                         &self.logger.people_in_stations,
-                        "{}, {}, {}\n",
-                        time,
-                        n_people,
+                        "{time}, {n_people}, {}",
                         line.get_name()
                     )
                     .expect("Cannot write to log");
                 }
-                write!(
-                    &self.logger.people_in_stations,
-                    "{}, {}, All lines\n",
-                    time, tot
-                )
-                .expect("Cannot write to log");
+                writeln!(&self.logger.people_in_stations, "{time}, {tot}, All lines")
+                    .expect("Cannot write to log");
             }
         }
 
-        Ok(Event {
-            time: time + Simulation::TIME_BETWEEN_SNAPSHOT,
+        Event {
+            time: time + Self::TIME_BETWEEN_SNAPSHOT,
             kind: EventKind::TimedSnapshot(snapshot_kind),
-        })
+        }
     }
 
     fn train_arrive(
@@ -274,9 +268,9 @@ impl Simulation {
                 .map_err(|()| "Cannot instert train because already full on node")?;
 
             let arrival = time + from_seconds(edge.get_distance_m() / (train.get_speed_m_s()));
-            write!(
+            writeln!(
                 self.logger.delay,
-                "{}, {}, {}\n",
+                "{}, {}, {}",
                 from_seconds(edge.get_distance_m() / Train::AVG_SPEED_M_S) * 3600.0,
                 (arrival - train.get_depart_time()) * 3600.0,
                 train.get_line_name()
