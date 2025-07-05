@@ -54,6 +54,15 @@ impl Line {
     pub fn get_name(&self) -> String {
         self.name.clone()
     }
+
+    pub fn get_n_people(&self) -> usize {
+        self.iter()
+            .map(|line_stop| {
+                line_stop.borrow().get_people_on_platform(Direction::Left)
+                    + line_stop.borrow().get_people_on_platform(Direction::Right)
+            })
+            .sum()
+    }
 }
 
 impl Debug for Line {

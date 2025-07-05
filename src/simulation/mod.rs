@@ -6,6 +6,7 @@ mod train_system;
 use crate::dataset::StationData;
 use crate::graph::Graph;
 use crate::graph::node::Station;
+use crate::logger::Logger;
 pub use crate::simulation::event::{Event, EventKind};
 use crate::train_lines::line::Line;
 use crate::train_lines::train::Train;
@@ -26,9 +27,12 @@ pub struct Simulation {
     distr_train_at_station: Exp<Time>,
     events: BinaryHeap<Event>,
     train_waiting: HashMap<(StationId, StationId), VecDeque<TrainId>>,
+    logger: Logger,
 }
 
 impl Simulation {
+    pub const TIME_BETWEEN_SNAPSHOT: Time = from_seconds(5.0);
+
     pub fn new(start_time: Time, end_time: Time, stations: &[StationData]) -> Self {
         let mut new = Self {
             graph: Graph::new(),
@@ -38,6 +42,7 @@ impl Simulation {
             events: Self::get_initial_events(start_time, end_time),
             distr_train_at_station: Exp::new(1.0 / from_seconds(20.0)).unwrap(),
             train_waiting: HashMap::new(),
+            logger: Logger::new(),
         };
 
         for (idx, data) in stations.iter().enumerate() {
