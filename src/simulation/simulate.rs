@@ -86,13 +86,8 @@ impl Simulation {
         station_id: StationId,
     ) -> Result<(Event, InfoKind), String> {
         // let n_stations = self.graph.get_nodes_len();
-        let station = self
-            .graph
-            .get_node_mut(station_id)
-            .ok_or("Station does not exist")?;
-        let line_stop = station
-            .get_random_line_stop()
-            .ok_or("Station has no line stops")?;
+        let station = self.graph.get_node_mut(station_id)?;
+        let line_stop = station.get_random_line_stop()?;
         let direction = Direction::rand();
         line_stop.borrow_mut().person_enter(direction, 1);
 
@@ -155,21 +150,18 @@ impl Simulation {
         let departure_time = if start == end {
             time + from_minutes(1.0)
         } else {
-            let curr_station = self.graph.get_node_mut(end).ok_or("Station not found")?;
+            let curr_station = self.graph.get_node_mut(end)?;
             curr_station.train_enter();
 
-            let edge = self
-                .graph
-                .get_edge_mut(start, end)
-                .ok_or("Edge not found")?;
+            let edge = self.graph.get_edge_mut(start, end)?;
             edge.train_exit()
-                .map_err(|()| "Cannot remove train because already 0 on edge")?;
+                .map_err(|err_str: String| format!("Cannot remove train because {err_str}"))?;
 
             time + self.distr_train_at_station.sample(&mut rand::rng())
         };
 
         train.go_next_stop();
-        let arrival_station = self.graph.get_node(end).ok_or("Station not found")?;
+        let arrival_station = self.graph.get_node(end)?;
         // TODO maybe we should do something with them
         let unloaded_passengers = train.unload_people_at_curr_station(arrival_station);
 
@@ -219,21 +211,12 @@ impl Simulation {
         let arrival_time = if start == end {
             time + from_minutes(1.0)
         } else {
-            let edge = self
-                .graph
-                .get_edge(start, end)
-                .ok_or("Edge doesn't exist")?;
+            let edge = self.graph.get_edge(start, end)?;
 
             if !edge.has_free_space() {
-                let start_station = self
-                    .graph
-                    .get_node(start)
-                    .ok_or("Current station doesn't exist")?;
+                let start_station = self.graph.get_node(start)?;
 
-                let end_station = self
-                    .graph
-                    .get_node(end)
-                    .ok_or("Current station doesn't exist")?;
+                let end_station = self.graph.get_node(end)?;
 
                 self.train_waiting
                     .entry((start, end))
@@ -250,22 +233,16 @@ impl Simulation {
                 ));
             }
 
-            let curr_station = self
-                .graph
-                .get_node_mut(start)
-                .ok_or("Current station doesn't exist")?;
+            let curr_station = self.graph.get_node_mut(start)?;
 
             curr_station
                 .train_exit()
-                .map_err(|()| "Cannot remove train because already 0 on node")?;
+                .map_err(|err_str: String| format!("Cannot remove train because {err_str}"))?;
 
-            let edge = self
-                .graph
-                .get_edge_mut(start, end)
-                .ok_or("Edge doesn't exist")?;
+            let edge = self.graph.get_edge_mut(start, end)?;
 
             edge.train_enter()
-                .map_err(|()| "Cannot instert train because already full on node")?;
+                .map_err(|err_str: String| format!("Cannot instert train because {err_str}"))?;
 
             let arrival = time + from_seconds(edge.get_distance_m() / (train.get_speed_m_s()));
             writeln!(
@@ -279,7 +256,7 @@ impl Simulation {
             arrival
         };
 
-        let departure_station = self.graph.get_node(start).ok_or("Station not found")?;
+        let departure_station = self.graph.get_node(start)?;
 
         Ok((
             Some(Event {
