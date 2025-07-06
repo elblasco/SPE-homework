@@ -23,21 +23,28 @@ impl Graph {
         }
     }
 
-    pub fn get_node(&self, station_id: StationId) -> Option<&Station> {
-        self.stations.get(&station_id)
+    pub fn get_node(&self, station_id: StationId) -> Result<&Station, String> {
+        self.stations
+            .get(&station_id)
+            .ok_or_else(|| "Station does not exist".to_string())
     }
 
-    pub fn get_node_mut(&mut self, station_id: StationId) -> Option<&mut Station> {
-        self.stations.get_mut(&station_id)
+    pub fn get_node_mut(&mut self, station_id: StationId) -> Result<&mut Station, String> {
+        self.stations
+            .get_mut(&station_id)
+            .ok_or_else(|| "Station does not exist".to_string())
     }
 
-    pub fn get_edge_mut(&mut self, from: StationId, to: StationId) -> Option<&mut Edge> {
-        self.graph.edge_weight_mut(from, to)
+    pub fn get_edge_mut(&mut self, from: StationId, to: StationId) -> Result<&mut Edge, String> {
+        self.graph
+            .edge_weight_mut(from, to)
+            .ok_or_else(|| "Edge does not exist".to_string())
     }
 
-    #[allow(dead_code)]
-    pub fn get_edge(&self, from: StationId, to: StationId) -> Option<&Edge> {
-        self.graph.edge_weight(from, to)
+    pub fn get_edge(&self, from: StationId, to: StationId) -> Result<&Edge, String> {
+        self.graph
+            .edge_weight(from, to)
+            .ok_or_else(|| "Edge does not exist".to_string())
     }
 
     pub fn add_node(&mut self, id: StationId, node: Station) {
