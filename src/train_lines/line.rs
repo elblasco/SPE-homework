@@ -32,12 +32,18 @@ impl Line {
         self.stops.iter()
     }
 
-    pub fn get_next(&self, pos: usize, dir: Direction) -> Option<StationId> {
+    pub fn get_next(&self, pos: usize, dir: Direction) -> Result<StationId, String> {
+        // match dir {
+        //     Direction::Left => self.get(pos.checked_sub(1)?),
+        //     Direction::Right => self.get(pos + 1),
+        // }
         match dir {
-            Direction::Left => self.get(pos.checked_sub(1)?),
+            Direction::Left => self.get(pos.saturating_sub(1)),
             Direction::Right => self.get(pos + 1),
         }
+        .ok_or_else(|| "Next station is not available".to_string())
     }
+
     pub fn get_next_pos(&self, pos: usize, dir: Direction) -> Option<usize> {
         let pos = match dir {
             Direction::Left => pos.checked_sub(1)?,

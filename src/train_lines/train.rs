@@ -29,10 +29,11 @@ impl Train {
         max_passenger: usize,
         pos_in_line: usize,
         direction: Direction,
-    ) -> Option<Self> {
-        line.get(pos_in_line)?;
+    ) -> Result<Self, String> {
+        line.get(pos_in_line)
+            .ok_or_else(|| "Invalid position in line".to_string())?;
 
-        Some(Self {
+        Ok(Self {
             n_passenger: 0,
             max_passenger,
             line,
@@ -48,21 +49,33 @@ impl Train {
     }
 
     pub fn get_next_station(&self) -> (StationId, Direction) {
-        let next_station = self.line.get_next(self.pos_in_line, self.direction);
-        if let Some(next_station) = next_station {
-            return (next_station, self.direction);
-        }
+        // let next_station = self.line.get_next(self.pos_in_line, self.direction);
+        // if let Some(next_station) = next_station {
+        //     return (next_station, self.direction);
+        // }
 
-        (self.get_curr_station(), self.direction.reverse())
+        // (self.get_curr_station(), self.direction.reverse())
+        self.line
+            .get_next(self.pos_in_line, self.direction)
+            .map_or_else(
+                |_| (self.get_curr_station(), self.direction.reverse()),
+                |next_station| (next_station, self.direction),
+            )
     }
 
     fn get_next_position(&self) -> (usize, Direction) {
-        let next_station = self.line.get_next_pos(self.pos_in_line, self.direction);
-        if let Some(next_station) = next_station {
-            return (next_station, self.direction);
-        }
+        // let next_station = self.line.get_next_pos(self.pos_in_line, self.direction);
+        // if let Some(next_station) = next_station {
+        //     return (next_station, self.direction);
+        // }
 
-        (self.pos_in_line, self.direction.reverse())
+        // (self.pos_in_line, self.direction.reverse())
+        self.line
+            .get_next_pos(self.pos_in_line, self.direction)
+            .map_or_else(
+                || (self.pos_in_line, self.direction.reverse()),
+                |next_station| (next_station, self.direction),
+            )
     }
 
     fn is_next_dir_changing(&self) -> bool {
