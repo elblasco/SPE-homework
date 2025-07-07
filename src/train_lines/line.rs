@@ -33,10 +33,6 @@ impl Line {
     }
 
     pub fn get_next(&self, pos: usize, dir: Direction) -> Result<StationId, String> {
-        // match dir {
-        //     Direction::Left => self.get(pos.checked_sub(1)?),
-        //     Direction::Right => self.get(pos + 1),
-        // }
         match dir {
             Direction::Left => pos.checked_sub(1).and_then(|idx| self.get(idx)),
             Direction::Right => self.get(pos + 1),

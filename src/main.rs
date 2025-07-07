@@ -3,6 +3,7 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::cargo_common_metadata)]
 #![allow(clippy::missing_const_for_fn)]
+#![allow(clippy::map_unwrap_or)]
 
 use crate::dataset::Dataset;
 use crate::simulation::{InfoKind, Simulation};

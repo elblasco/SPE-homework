@@ -30,8 +30,7 @@ impl Train {
         pos_in_line: usize,
         direction: Direction,
     ) -> Result<Self, String> {
-        line.get(pos_in_line)
-            .ok_or("Invalid position in line".to_string())?;
+        line.get(pos_in_line).ok_or("Invalid position in line")?;
 
         Ok(Self {
             n_passenger: 0,
