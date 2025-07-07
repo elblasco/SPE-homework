@@ -1,5 +1,3 @@
-pub type EdgeResult = Result<usize, String>;
-
 #[derive(Debug)]
 pub struct Edge {
     occupancy: usize,
@@ -20,7 +18,7 @@ impl Edge {
         self.occupancy < self.max_capacity
     }
 
-    pub fn train_enter(&mut self) -> EdgeResult {
+    pub fn train_enter(&mut self) -> Result<usize, String> {
         if self.occupancy < self.max_capacity {
             self.occupancy += 1;
             return Ok(self.occupancy);
@@ -28,7 +26,7 @@ impl Edge {
         Err("Edge capacity exceeded".to_string())
     }
 
-    pub fn train_exit(&mut self) -> EdgeResult {
+    pub fn train_exit(&mut self) -> Result<usize, String> {
         if self.occupancy > 0 {
             self.occupancy -= 1;
             return Ok(self.occupancy);
