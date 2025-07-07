@@ -59,7 +59,7 @@ impl Station {
 
         self.line_stops
             .get(rand)
-            .map(|next_line_stop| Rc::clone(next_line_stop))
+            .map(Rc::clone)
             .ok_or_else(|| "There is no next line stop".to_string())
     }
 

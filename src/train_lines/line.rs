@@ -38,7 +38,7 @@ impl Line {
         //     Direction::Right => self.get(pos + 1),
         // }
         match dir {
-            Direction::Left => self.get(pos.saturating_sub(1)),
+            Direction::Left => pos.checked_sub(1).and_then(|idx| self.get(idx)),
             Direction::Right => self.get(pos + 1),
         }
         .ok_or_else(|| "Next station is not available".to_string())

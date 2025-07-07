@@ -49,29 +49,17 @@ impl Train {
     }
 
     pub fn get_next_station(&self) -> (StationId, Direction) {
-        // let next_station = self.line.get_next(self.pos_in_line, self.direction);
-        // if let Some(next_station) = next_station {
-        //     return (next_station, self.direction);
-        // }
-
-        // (self.get_curr_station(), self.direction.reverse())
-        match self.line.get_next(self.pos_in_line, self.direction) {
-            Ok(next_station) => (next_station, self.direction),
-            Err(_) => (self.get_curr_station(), self.direction.reverse()),
-        }
+        self.line
+            .get_next(self.pos_in_line, self.direction)
+            .map(|next_station| (next_station, self.direction))
+            .unwrap_or_else(|_| (self.get_curr_station(), self.direction.reverse()))
     }
 
     fn get_next_position(&self) -> (usize, Direction) {
-        // let next_station = self.line.get_next_pos(self.pos_in_line, self.direction);
-        // if let Some(next_station) = next_station {
-        //     return (next_station, self.direction);
-        // }
-
-        // (self.pos_in_line, self.direction.reverse())
-        match self.line.get_next_pos(self.pos_in_line, self.direction) {
-            Err(_) => (self.pos_in_line, self.direction.reverse()),
-            Some(next_station) => (next_station, self.direction),
-        }
+        self.line
+            .get_next_pos(self.pos_in_line, self.direction)
+            .map(|next_pos| (next_pos, self.direction))
+            .unwrap_or_else(|| (self.pos_in_line, self.direction.reverse()))
     }
 
     fn is_next_dir_changing(&self) -> bool {
