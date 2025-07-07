@@ -1,6 +1,10 @@
 #![allow(dead_code)]
 use crate::train_lines::Time;
 
+pub fn from_days(days: f64) -> Time {
+    days * 24.0
+}
+
 pub const fn from_hour(hour: f64) -> Time {
     hour
 }
