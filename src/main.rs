@@ -7,8 +7,8 @@
 
 use crate::dataset::Dataset;
 use crate::simulation::{InfoKind, Simulation};
-use crate::train_lines::line::Line;
 use crate::train_lines::Direction;
+use crate::train_lines::line::Line;
 use crate::utils::time::from_days;
 use rand::Rng;
 use std::fs::File;
