@@ -29,10 +29,10 @@ impl Train {
         max_passenger: usize,
         pos_in_line: usize,
         direction: Direction,
-    ) -> Option<Self> {
-        line.get(pos_in_line)?;
+    ) -> Result<Self, String> {
+        line.get(pos_in_line).ok_or("Invalid position in line")?;
 
-        Some(Self {
+        Ok(Self {
             n_passenger: 0,
             max_passenger,
             line,
@@ -48,21 +48,17 @@ impl Train {
     }
 
     pub fn get_next_station(&self) -> (StationId, Direction) {
-        let next_station = self.line.get_next(self.pos_in_line, self.direction);
-        if let Some(next_station) = next_station {
-            return (next_station, self.direction);
-        }
-
-        (self.get_curr_station(), self.direction.reverse())
+        self.line
+            .get_next(self.pos_in_line, self.direction)
+            .map(|next_station| (next_station, self.direction))
+            .unwrap_or_else(|_| (self.get_curr_station(), self.direction.reverse()))
     }
 
     fn get_next_position(&self) -> (usize, Direction) {
-        let next_station = self.line.get_next_pos(self.pos_in_line, self.direction);
-        if let Some(next_station) = next_station {
-            return (next_station, self.direction);
-        }
-
-        (self.pos_in_line, self.direction.reverse())
+        self.line
+            .get_next_pos(self.pos_in_line, self.direction)
+            .map(|next_pos| (next_pos, self.direction))
+            .unwrap_or_else(|| (self.pos_in_line, self.direction.reverse()))
     }
 
     fn is_next_dir_changing(&self) -> bool {

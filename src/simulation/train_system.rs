@@ -15,9 +15,9 @@ impl Simulation {
 
         //println!("{}", line_data.name);
         for (a, b) in line.iter_station_id().tuple_windows() {
-            let node_a = self.graph.get_node(a).ok_or("Missing station")?;
+            let node_a = self.graph.get_node(a)?;
             //let name_a = node_a.get_name();
-            let node_b = self.graph.get_node(b).ok_or("Missing station")?;
+            let node_b = self.graph.get_node(b)?;
             //let name_b = node_b.get_name();
 
             let distance_m = haversine(
@@ -52,14 +52,11 @@ impl Simulation {
         dir: Direction,
     ) -> Result<TrainId, String> {
         let station_id = line.get(pos_in_line).ok_or("Invalid pos in line")?;
-        let station = self
-            .graph
-            .get_node_mut(station_id)
-            .ok_or("Line is broken, no station connected")?;
+        let station = self.graph.get_node_mut(station_id)?;
 
         let _ = self.trains.insert(
             self.next_train_id,
-            Train::new(Rc::clone(line), capacity, pos_in_line, dir).ok_or("Invalid pos in line")?,
+            Train::new(Rc::clone(line), capacity, pos_in_line, dir)?,
         );
         station.train_enter();
         self.next_train_id += 1;

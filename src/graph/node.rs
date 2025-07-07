@@ -46,21 +46,21 @@ impl Station {
         self.occupancy += 1;
     }
 
-    pub fn train_exit(&mut self) -> Result<usize, ()> {
+    pub fn train_exit(&mut self) -> Result<usize, String> {
         if self.occupancy > 0 {
             self.occupancy -= 1;
             return Ok(self.occupancy);
         }
-        Err(())
+        Err("Station empty".to_string())
     }
 
-    pub fn get_random_line_stop(&self) -> Option<Rc<RefCell<LineStop>>> {
-        if self.line_stops.is_empty() {
-            return None;
-        }
-
+    pub fn get_random_line_stop(&self) -> Result<Rc<RefCell<LineStop>>, String> {
         let rand = rand::rng().random_range(0..self.line_stops.len());
-        self.line_stops.get(rand).map(Rc::clone)
+
+        self.line_stops
+            .get(rand)
+            .map(Rc::clone)
+            .ok_or_else(|| "There is no next line stop".to_string())
     }
 
     //n_people: poeple descent from metro
