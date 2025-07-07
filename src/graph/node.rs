@@ -1,8 +1,8 @@
-use crate::train_lines::Direction;
 use crate::train_lines::line::Line;
 use crate::train_lines::line_stop::LineStop;
-use rand::Rng;
+use crate::train_lines::Direction;
 use rand::prelude::SliceRandom;
+use rand::Rng;
 use rand_distr::Distribution;
 use rand_distr::Exp;
 use std::cell::RefCell;
@@ -57,10 +57,10 @@ impl Station {
     pub fn get_random_line_stop(&self) -> Result<Rc<RefCell<LineStop>>, String> {
         let rand = rand::rng().random_range(0..self.line_stops.len());
 
-        self.line_stops.get(rand).map_or_else(
-            || Err("There is no next line stop".to_string()),
-            |next_line_stop| Ok(Rc::clone(next_line_stop)),
-        )
+        self.line_stops
+            .get(rand)
+            .map(|next_line_stop| Rc::clone(next_line_stop))
+            .ok_or_else(|| "There is no next line stop".to_string())
     }
 
     //n_people: poeple descent from metro

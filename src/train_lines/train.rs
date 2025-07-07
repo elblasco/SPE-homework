@@ -31,7 +31,7 @@ impl Train {
         direction: Direction,
     ) -> Result<Self, String> {
         line.get(pos_in_line)
-            .ok_or_else(|| "Invalid position in line".to_string())?;
+            .ok_or("Invalid position in line".to_string())?;
 
         Ok(Self {
             n_passenger: 0,
@@ -55,12 +55,10 @@ impl Train {
         // }
 
         // (self.get_curr_station(), self.direction.reverse())
-        self.line
-            .get_next(self.pos_in_line, self.direction)
-            .map_or_else(
-                |_| (self.get_curr_station(), self.direction.reverse()),
-                |next_station| (next_station, self.direction),
-            )
+        match self.line.get_next(self.pos_in_line, self.direction) {
+            Ok(next_station) => (next_station, self.direction),
+            Err(_) => (self.get_curr_station(), self.direction.reverse()),
+        }
     }
 
     fn get_next_position(&self) -> (usize, Direction) {
@@ -70,12 +68,10 @@ impl Train {
         // }
 
         // (self.pos_in_line, self.direction.reverse())
-        self.line
-            .get_next_pos(self.pos_in_line, self.direction)
-            .map_or_else(
-                || (self.pos_in_line, self.direction.reverse()),
-                |next_station| (next_station, self.direction),
-            )
+        match self.line.get_next_pos(self.pos_in_line, self.direction) {
+            Err(_) => (self.pos_in_line, self.direction.reverse()),
+            Some(next_station) => (next_station, self.direction),
+        }
     }
 
     fn is_next_dir_changing(&self) -> bool {
