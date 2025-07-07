@@ -9,7 +9,8 @@ pub struct Logger {
 impl Logger {
     pub fn new() -> Self {
         let mut new = Self {
-            delay: File::create("output/delay.csv").expect("Cannot create log file"),
+            delay: File::create("output/delay.csv")
+                .expect("Cannot create log file, probably need to create output directory"),
             people_in_stations: File::create("output/people.csv").expect("Cannot create log file"),
         };
 
