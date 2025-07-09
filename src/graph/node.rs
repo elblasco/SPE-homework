@@ -1,8 +1,8 @@
 use crate::train_lines::Direction;
 use crate::train_lines::line::Line;
 use crate::train_lines::line_stop::LineStop;
+use crate::train_lines::person::Person;
 use rand::Rng;
-use rand::prelude::SliceRandom;
 use rand_distr::Distribution;
 use rand_distr::Exp;
 use std::cell::RefCell;
@@ -63,28 +63,47 @@ impl Station {
             .ok_or_else(|| "There is no next line stop".to_string())
     }
 
-    //n_people: poeple descent from metro
-    pub fn deploy_people(&self, n_people: usize, descending_from: &Rc<Line>) {
+    // Descending from is used to avoid having people get off
+    // and immediately get the same line
+    pub fn deploy_people(&self, people: Vec<Person>, descending_from: &Rc<Line>) -> Vec<Person> {
         if self.line_stops.len() <= 1 {
-            // All people get out of the metro
-            // TODO change rate of descent
-            return;
+            return people;
         }
-        let mut people_not_exited = rand::random_range(0..=n_people);
-        let mut stops = self.line_stops.clone();
-        stops.shuffle(&mut rand::rng());
-        for stop in stops {
-            if stop.borrow().get_line_name() == descending_from.get_name() {
-                continue;
-            }
 
-            let people_for_curr_stop = rand::random_range(0..=people_not_exited);
-            people_not_exited -= people_for_curr_stop;
-            if people_for_curr_stop > 0 {
-                stop.borrow_mut()
-                    .person_enter(Direction::rand(), people_for_curr_stop);
+        let mut rng = rand::rng();
+        let n_lines = self.line_stops.len();
+        let mut exiting_people = vec![];
+
+        for person in people {
+            let rand_pos = rng.random_range(0..n_lines);
+            let mut line_stop = self.line_stops[rand_pos].borrow_mut();
+
+            if line_stop.get_line_name() == descending_from.get_name() {
+                exiting_people.push(person);
+            } else {
+                line_stop.person_enter(Direction::rand(), person);
             }
         }
+
+        exiting_people
+
+        // let mut stops = self.line_stops.clone();
+        // stops.shuffle(&mut rand::rng());
+        //
+        // for stop in stops {
+        //     if stop.borrow().get_line_name() == descending_from.get_name() {
+        //         // Skip line from which they descended
+        //         continue;
+        //     }
+        //
+        //     let people_for_curr_stop = rand::random_range(0..=people_not_exited);
+        //
+        //     let deque_people_enter = descending_from.people_not_exited -= people_for_curr_stop;
+        //     if people_for_curr_stop > 0 {
+        //         stop.borrow_mut()
+        //             .people_enter(Direction::rand(), deque_people_enter);
+        //     }
+        // }
     }
 
     pub fn add_line_stop(&mut self, new_train_line: Rc<RefCell<LineStop>>) {

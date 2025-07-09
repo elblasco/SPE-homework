@@ -14,6 +14,9 @@ use rand::Rng;
 use std::fs::File;
 use std::rc::Rc;
 
+#[cfg(debug_assertions)]
+use crate::utils::time::fmt_time;
+
 mod dataset;
 mod graph;
 mod logger;
@@ -40,17 +43,6 @@ fn add_test_train(
     }
 
     Ok(())
-
-    // system.add_train(30, &lines[0], 2, Left).unwrap();
-    // system.add_train(50, &lines[1], 3, Right).unwrap();
-    // system.add_train(70, &lines[1], 2, Right).unwrap();
-    // system.add_train(70, &lines[1], 2, Right).unwrap();
-    // system.add_train(70, &lines[1], 8, Left).unwrap();
-    // system.add_train(70, &lines[1], 8, Right).unwrap();
-    // system.add_train(70, &lines[1], 16, Left).unwrap();
-    // system.add_train(70, &lines[1], 16, Right).unwrap();
-    // system.add_train(70, &lines[1], 10, Left).unwrap();
-    // system.add_train(70, &lines[1], 10, Right).unwrap();
 }
 
 fn main() {
@@ -58,7 +50,7 @@ fn main() {
     let dataset =
         serde_json::from_reader::<File, Dataset>(file).expect("JSON was not well-formatted");
 
-    let mut system = Simulation::new(0.0, from_days(10.0), &dataset.stations);
+    let mut system = Simulation::new(0.0, from_days(5.0), &dataset.stations);
 
     let mut lines = vec![];
     for data in &dataset.lines {
@@ -79,12 +71,13 @@ fn simulate(mut system: Simulation) {
 
         match result {
             Ok(info) => {
-                // match _info.kind {
-                //     InfoKind::PersonArrived { .. } | InfoKind::TimedSnapshot { .. } => {}
-                //     _ => {
-                //         println!("LOG {} -> {}", fmt_time(info.time), info.kind);
-                //     }
-                // }
+                #[cfg(debug_assertions)]
+                match info.kind {
+                    InfoKind::PersonArrived { .. } | InfoKind::TimedSnapshot { .. } => {}
+                    _ => {
+                        println!("LOG {} -> {}", fmt_time(info.time), info.kind);
+                    }
+                }
 
                 running = !matches!(info.kind, InfoKind::SimulationEnded());
             }
