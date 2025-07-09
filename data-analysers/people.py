@@ -2,6 +2,7 @@
 
 import csv
 
+# noinspection PyUnresolvedReferences
 import matplotlib.pyplot as plt
 
 csv_reader = csv.reader(open('../output/people.csv', mode='r'))
