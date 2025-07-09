@@ -1,9 +1,13 @@
 #!/usr/bin/env pyton3
 
-import matplotlib.pyplot as plt
 import csv
 
-csv_reader = csv.reader(open('../output/delay.csv', mode ='r'))
+# noinspection PyUnresolvedReferences
+import matplotlib.pyplot as plt
+# noinspection PyUnresolvedReferences
+import numpy as np
+
+csv_reader = csv.reader(open('../output/delay.csv', mode='r'))
 
 time_percentage: list = []
 lines: list = []
@@ -14,12 +18,33 @@ for line in csv_reader:
     time_percentage.append(float(line[1]) / float(line[0]))
     lines.append(line[2].strip())
 
-filtered_u1 = [time for time, line in zip(time_percentage, lines) if line == "U1"]
-filtered_u2 = [time for time, line in zip(time_percentage, lines) if line == "U2"]
+filtered: list = [
+    time_percentage,
+    [time for time, line in zip(time_percentage, lines) if line == "U1"],
+    [time for time, line in zip(time_percentage, lines) if line == "U2"],
+    [time for time, line in zip(time_percentage, lines) if line == "U3"],
+    [time for time, line in zip(time_percentage, lines) if line == "U4"],
+    [time for time, line in zip(time_percentage, lines) if line == "U6"],
+]
 
-_, ax = plt.subplots(1, 3)
-ax[0].hist(time_percentage, bins=20)
-ax[1].hist(filtered_u1, bins=20)
-ax[2].hist(filtered_u2, bins=20)
+names = [
+    "Totals delay",
+    "Delay U1",
+    "Delay U2",
+    "Delay U3",
+    "Delay U4",
+    "Delay U6",
+]
 
+fig, ax = plt.subplots(2, 3)
+for i in range(2):
+    for j in range(3):
+        el = i * 3 + j
+        ax[i][j].hist(filtered[el], bins=40, label=names[el])
+
+        mean = np.mean(filtered[el])
+        ax[i][j].axvline(x=mean, color='r', linestyle='dashed', label="Mean")
+        ax[i][j].legend(loc="upper right")
+
+        print(names[el], mean)
 plt.show()

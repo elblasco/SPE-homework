@@ -37,7 +37,7 @@ impl Simulation {
 
         for stop in line.iter() {
             let station_id = stop.borrow().get_station_id();
-            let node = self.graph.get_node_mut(station_id).unwrap();
+            let node = self.graph.get_node_mut(station_id)?;
             node.add_line_stop(Rc::clone(stop));
         }
 

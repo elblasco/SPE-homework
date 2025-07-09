@@ -2,6 +2,7 @@ use rand::Rng;
 
 pub mod line;
 pub mod line_stop;
+pub mod person;
 pub mod train;
 
 pub type StationId = usize;

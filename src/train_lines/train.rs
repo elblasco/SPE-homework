@@ -1,15 +1,17 @@
 use crate::graph::node::Station;
 use crate::train_lines::line::Line;
+use crate::train_lines::person::Person;
 use crate::train_lines::{Direction, StationId, Time};
 use rand::Rng;
+use rand::seq::SliceRandom;
 use rand_distr::Distribution;
 use rand_distr::Normal;
 use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct Train {
-    n_passenger: usize,
-    max_passenger: usize,
+    passengers: Vec<Person>,
+    max_passengers: usize,
     line: Rc<Line>,
     pos_in_line: usize,
     direction: Direction,
@@ -26,15 +28,15 @@ impl Train {
 
     pub fn new(
         line: Rc<Line>,
-        max_passenger: usize,
+        max_passengers: usize,
         pos_in_line: usize,
         direction: Direction,
     ) -> Result<Self, String> {
         line.get(pos_in_line).ok_or("Invalid position in line")?;
 
         Ok(Self {
-            n_passenger: 0,
-            max_passenger,
+            passengers: vec![],
+            max_passengers,
             line,
             pos_in_line,
             direction,
@@ -71,31 +73,54 @@ impl Train {
         self.direction = next_dir;
     }
 
-    pub fn load_people_at_curr_station(&mut self) -> Result<usize, String> {
+    // Returns number of people loaded at current station
+    pub fn load_people_at_curr_station(&mut self, time: Time) -> Result<usize, String> {
         let line_stop = self
             .line
             .get_stop(self.pos_in_line)
             .ok_or("Train's line stop does not exist")?;
 
-        let n_people = line_stop
-            .borrow_mut()
-            .person_exit(self.direction, self.max_passenger - self.n_passenger);
-        self.n_passenger += n_people;
-        // assert!(self.n_passenger <= self.max_passenger);
+        let mut people = line_stop.borrow_mut().person_exit(
+            self.direction,
+            self.max_passengers - self.get_n_passengers(),
+        );
+
+        for p in &mut people {
+            p.record_board(time, Rc::clone(&self.line), self.get_curr_station());
+        }
+
+        let n_people = people.len();
+        self.passengers.extend(people);
+        assert!(self.get_n_passengers() <= self.max_passengers);
         Ok(n_people)
     }
 
-    pub fn unload_people_at_curr_station(&mut self, station: &Station) -> usize {
+    // Returns number of people unloaded at current station
+    // Also return the people that completely left the system
+    pub fn unload_people_at_curr_station(
+        &mut self,
+        station: &Station,
+        time: Time,
+    ) -> Result<(usize, Vec<Person>), String> {
+        let mut rng = rand::rng();
+
         let n_people = if self.is_next_dir_changing() {
-            self.n_passenger
+            self.get_n_passengers()
         } else {
-            rand::rng().random_range(0..=self.n_passenger)
+            rng.random_range(0..=self.get_n_passengers())
         };
 
-        self.n_passenger -= n_people;
+        self.passengers.shuffle(&mut rng);
+        let mut unloaded_people = self.passengers.drain(0..n_people).collect::<Vec<_>>();
 
-        station.deploy_people(n_people, &self.line);
-        n_people
+        for p in &mut unloaded_people {
+            // TODO CHECK station vs curr_station
+            p.record_dismount(time, self.get_curr_station())?;
+        }
+
+        let total_decending = unloaded_people.len();
+        let people_exited = station.deploy_people(unloaded_people, &self.line);
+        Ok((total_decending, people_exited))
     }
 
     pub fn get_line_name(&self) -> String {
@@ -103,11 +128,11 @@ impl Train {
     }
 
     pub fn get_n_passengers(&self) -> usize {
-        self.n_passenger
+        self.passengers.len()
     }
 
     pub fn get_max_passenger(&self) -> usize {
-        self.max_passenger
+        self.max_passengers
     }
 
     pub fn get_speed_m_s(&self) -> f64 {

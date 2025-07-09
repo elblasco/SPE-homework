@@ -1,6 +1,7 @@
 use crate::simulation::event::SnapshotKind;
 use crate::simulation::info::Info;
 use crate::simulation::{Event, EventKind, InfoKind, Simulation};
+use crate::train_lines::person::Person;
 use crate::train_lines::train::Train;
 use crate::train_lines::{Direction, StationId, Time, TrainId};
 use crate::utils::time::{from_minutes, from_seconds};
@@ -89,7 +90,9 @@ impl Simulation {
         let station = self.graph.get_node_mut(station_id)?;
         let line_stop = station.get_random_line_stop()?;
         let direction = Direction::rand();
-        line_stop.borrow_mut().person_enter(direction, 1);
+        line_stop
+            .borrow_mut()
+            .person_enter(direction, Person::new(time));
 
         if self.next_train_id == 0 {
             return Err("No Train".to_string());
@@ -163,7 +166,25 @@ impl Simulation {
         train.go_next_stop();
         let arrival_station = self.graph.get_node(end)?;
         // TODO maybe we should do something with them
-        let unloaded_passengers = train.unload_people_at_curr_station(arrival_station);
+        let (unloaded_passengers, exiting_from_system) =
+            train.unload_people_at_curr_station(arrival_station, time)?;
+
+        for person in exiting_from_system {
+            let mut arr_time = person.get_arrival_time();
+            for step in person.iter_steps() {
+                writeln!(
+                    self.logger.time_to_board,
+                    "{}, {}, {}, {}",
+                    arr_time,
+                    step.get_from_station_id(),
+                    step.get_line_name(),
+                    step.get_board_time() - arr_time,
+                )
+                .expect("Cannot write to log");
+
+                arr_time = step.get_dismount_time();
+            }
+        }
 
         let mut events = vec![Event {
             time: departure_time,
@@ -206,7 +227,7 @@ impl Simulation {
         let start = train.get_curr_station();
         let (end, _) = train.get_next_station();
 
-        let loaded_passengers = train.load_people_at_curr_station()?;
+        let loaded_passengers = train.load_people_at_curr_station(time)?;
 
         let arrival_time = if start == end {
             time + from_minutes(1.0)
