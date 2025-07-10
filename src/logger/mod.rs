@@ -1,11 +1,12 @@
+use crate::train_lines::Time;
 use std::fs;
 use std::fs::File;
-use std::io::Write;
+use std::io::{BufWriter, Write};
 
 pub struct Logger {
-    pub delay: File,
-    pub people_in_stations: File,
-    pub time_to_board: File,
+    delay: BufWriter<File>,
+    people_in_stations: BufWriter<File>,
+    time_to_board: BufWriter<File>,
 }
 
 impl Logger {
@@ -15,24 +16,57 @@ impl Logger {
         }
 
         let mut new = Self {
-            delay: File::create("output/delay.csv")
-                .expect("Cannot create log file, probably need to create output directory"),
-            people_in_stations: File::create("output/people.csv").expect("Cannot create log file"),
-            time_to_board: File::create("output/board_time.csv").expect("Cannot create log file"),
+            delay: BufWriter::new(
+                File::create("output/delay.csv")
+                    .expect("Cannot create log file, probably need to create output directory"),
+            ),
+            people_in_stations: BufWriter::new(
+                File::create("output/people.csv").expect("Cannot create log file"),
+            ),
+            time_to_board: BufWriter::new(
+                File::create("output/board_time.csv").expect("Cannot create log file"),
+            ),
         };
 
         new.print_headers();
         new
     }
 
+    pub fn flush(&mut self) {
+        self.time_to_board
+            .flush()
+            .expect("Could not flush log file");
+        self.people_in_stations
+            .flush()
+            .expect("Could not flush log file");
+        self.delay.flush().expect("Could not flush log file");
+    }
+
     fn print_headers(&mut self) {
-        writeln!(self.delay, "Expected Time, Real Time, Line Name").expect("Cannot write to log");
-        writeln!(self.people_in_stations, "Time, People, Station Name")
-            .expect("Cannot write to log");
-        writeln!(
-            self.time_to_board,
-            "Time, StationId, Line Name, Time To Board"
-        )
-        .expect("Cannot write to log");
+        self.println_delay(0.0, "Expected Time, Real Time, Line Name");
+        self.println_people_in_station(0.0, "Time, People, Station Name");
+        self.println_time_to_board(0.0, "Time (h), StationId, Line Name, Time To Board (min)");
+    }
+
+    fn println_to_file(file: &mut BufWriter<File>, str: &str) {
+        writeln!(file, "{str}").expect("Cannot write to log");
+    }
+
+    pub fn println_delay(&mut self, time: Time, str: &str) {
+        if time >= 0.0 {
+            Self::println_to_file(&mut self.delay, str);
+        }
+    }
+
+    pub fn println_people_in_station(&mut self, time: Time, str: &str) {
+        if time >= 0.0 {
+            Self::println_to_file(&mut self.people_in_stations, str);
+        }
+    }
+
+    pub fn println_time_to_board(&mut self, time: Time, str: &str) {
+        if time >= 0.0 {
+            Self::println_to_file(&mut self.time_to_board, str);
+        }
     }
 }
