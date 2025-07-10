@@ -76,7 +76,7 @@ fn simulate(mut system: Simulation) {
                 if system.get_last_event_time() > last_printed_time + PRINT_INTERVAL {
                     last_printed_time = system.get_last_event_time();
                     if last_printed_time < 0.0 {
-                        println!("Missing warmup time: {}", fmt_time(-last_printed_time))
+                        println!("Missing warmup time: {}", fmt_time(-last_printed_time));
                     } else {
                         println!("Currently at time: {}", fmt_time(last_printed_time));
                     }
