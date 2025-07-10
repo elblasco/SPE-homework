@@ -4,8 +4,8 @@ mod simulate;
 mod train_system;
 
 use crate::dataset::StationData;
-use crate::graph::Graph;
 use crate::graph::node::Station;
+use crate::graph::Graph;
 use crate::logger::Logger;
 pub use crate::simulation::event::{Event, EventKind};
 use crate::train_lines::line::Line;
@@ -28,6 +28,7 @@ pub struct Simulation {
     events: BinaryHeap<Event>,
     train_waiting: HashMap<(StationId, StationId), VecDeque<TrainId>>,
     logger: Logger,
+    last_event_time: Time,
 }
 
 impl Simulation {
@@ -43,6 +44,7 @@ impl Simulation {
             distr_train_at_station: Exp::new(1.0 / from_seconds(20.0)).unwrap(),
             train_waiting: HashMap::new(),
             logger: Logger::new(),
+            last_event_time: start_time,
         };
 
         for (idx, data) in stations.iter().enumerate() {
@@ -70,6 +72,14 @@ impl Simulation {
 
     pub fn iter_trains(&self) -> impl Iterator<Item = &Train> {
         self.trains.values()
+    }
+
+    pub fn get_last_event_time(&self) -> Time {
+        self.last_event_time
+    }
+
+    pub fn flush_files(&mut self) {
+        self.logger.flush();
     }
 }
 

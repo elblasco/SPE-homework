@@ -7,7 +7,6 @@ use crate::train_lines::{Direction, StationId, Time, TrainId};
 use crate::utils::time::{from_minutes, from_seconds};
 use rand_distr::Distribution;
 use std::collections::VecDeque;
-use std::io::Write;
 
 impl Simulation {
     pub fn simulation_step(&mut self) -> Result<Info, String> {
@@ -15,6 +14,8 @@ impl Simulation {
             time,
             kind: event_kind,
         } = self.events.pop().unwrap();
+
+        self.last_event_time = time;
 
         let info_kind = match event_kind {
             EventKind::Start => self.start_sim(time),
@@ -111,7 +112,7 @@ impl Simulation {
         ))
     }
 
-    fn snapshot(&self, time: Time, snapshot_kind: SnapshotKind) -> Event {
+    fn snapshot(&mut self, time: Time, snapshot_kind: SnapshotKind) -> Event {
         match snapshot_kind {
             SnapshotKind::PeopleInStation => {
                 let mut tot = 0;
@@ -119,15 +120,13 @@ impl Simulation {
                     let n_people = line.get_n_people();
                     tot += n_people;
 
-                    writeln!(
-                        &self.logger.people_in_stations,
-                        "{time}, {n_people}, {}",
-                        line.get_name()
-                    )
-                    .expect("Cannot write to log");
+                    self.logger.println_people_in_station(
+                        time,
+                        &format!("{time}, {n_people}, {}", line.get_name()),
+                    );
                 }
-                writeln!(&self.logger.people_in_stations, "{time}, {tot}, All lines")
-                    .expect("Cannot write to log");
+                self.logger
+                    .println_people_in_station(time, &format!("{time}, {tot}, All lines"));
             }
         }
 
@@ -172,15 +171,16 @@ impl Simulation {
         for person in exiting_from_system {
             let mut arr_time = person.get_arrival_time();
             for step in person.iter_steps() {
-                writeln!(
-                    self.logger.time_to_board,
-                    "{}, {}, {}, {}",
-                    arr_time,
-                    step.get_from_station_id(),
-                    step.get_line_name(),
-                    step.get_board_time() - arr_time,
-                )
-                .expect("Cannot write to log");
+                self.logger.println_time_to_board(
+                    time,
+                    &format!(
+                        "{}, {}, {}, {}",
+                        arr_time,
+                        step.get_from_station_id(),
+                        step.get_line_name(),
+                        (step.get_board_time() - arr_time) * 60.0,
+                    ),
+                );
 
                 arr_time = step.get_dismount_time();
             }
@@ -266,14 +266,15 @@ impl Simulation {
                 .map_err(|err_str: String| format!("Cannot instert train because {err_str}"))?;
 
             let arrival = time + from_seconds(edge.get_distance_m() / (train.get_speed_m_s()));
-            writeln!(
-                self.logger.delay,
-                "{}, {}, {}",
-                from_seconds(edge.get_distance_m() / Train::AVG_SPEED_M_S) * 3600.0,
-                (arrival - train.get_depart_time()) * 3600.0,
-                train.get_line_name()
-            )
-            .expect("Cannot write to log");
+            self.logger.println_delay(
+                time,
+                &format!(
+                    "{}, {}, {}",
+                    from_seconds(edge.get_distance_m() / Train::AVG_SPEED_M_S) * 3600.0,
+                    (arrival - train.get_depart_time()) * 3600.0,
+                    train.get_line_name()
+                ),
+            );
             arrival
         };
 

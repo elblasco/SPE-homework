@@ -18,7 +18,7 @@ next(csv_reader)
 for line in csv_reader:
     arrival_times_h.append(float(line[0]))
     lines.append(line[2].strip())
-    board_times_min.append(float(line[3]) * 60)
+    board_times_min.append(float(line[3]))
 
 filtered: list = [
     (board_times_min, arrival_times_h),

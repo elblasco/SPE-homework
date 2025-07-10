@@ -7,15 +7,12 @@
 
 use crate::dataset::Dataset;
 use crate::simulation::{InfoKind, Simulation};
-use crate::train_lines::Direction;
 use crate::train_lines::line::Line;
-use crate::utils::time::from_days;
+use crate::train_lines::{Direction, Time};
+use crate::utils::time::{fmt_time, from_days, from_hour};
 use rand::Rng;
 use std::fs::File;
 use std::rc::Rc;
-
-#[cfg(debug_assertions)]
-use crate::utils::time::fmt_time;
 
 mod dataset;
 mod graph;
@@ -45,12 +42,16 @@ fn add_test_train(
     Ok(())
 }
 
+const WARMUP_TIME: Time = from_days(100.0);
+const SIM_LEN: Time = from_days(10.0);
+const PRINT_INTERVAL: Time = from_hour(2.0);
+
 fn main() {
     let file = File::open("datasets/Wien.json").expect("Cannot open file");
     let dataset =
         serde_json::from_reader::<File, Dataset>(file).expect("JSON was not well-formatted");
 
-    let mut system = Simulation::new(0.0, from_days(5.0), &dataset.stations);
+    let mut system = Simulation::new(-WARMUP_TIME, SIM_LEN, &dataset.stations);
 
     let mut lines = vec![];
     for data in &dataset.lines {
@@ -64,6 +65,7 @@ fn main() {
 
 fn simulate(mut system: Simulation) {
     let mut running = true;
+    let mut last_printed_time = f64::MIN;
 
     println!();
     while running {
@@ -71,6 +73,15 @@ fn simulate(mut system: Simulation) {
 
         match result {
             Ok(info) => {
+                if system.get_last_event_time() > last_printed_time + PRINT_INTERVAL {
+                    last_printed_time = system.get_last_event_time();
+                    if last_printed_time < 0.0 {
+                        println!("Missing warmup time: {}", fmt_time(-last_printed_time))
+                    } else {
+                        println!("Currently at time: {}", fmt_time(last_printed_time));
+                    }
+                }
+
                 #[cfg(debug_assertions)]
                 match info.kind {
                     InfoKind::PersonArrived { .. } | InfoKind::TimedSnapshot { .. } => {}
@@ -90,4 +101,6 @@ fn simulate(mut system: Simulation) {
             }
         }
     }
+
+    system.flush_files();
 }
