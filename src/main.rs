@@ -44,7 +44,8 @@ fn add_test_train(
 }
 
 fn main() {
-    let file = File::open("datasets/Wien.json").expect("Cannot open file");
+    let file = File::open("datasets/Wien.json")
+        .expect("Cannot open datasets file (running from wrong location?)");
     let dataset =
         serde_json::from_reader::<File, Dataset>(file).expect("JSON was not well-formatted");
 

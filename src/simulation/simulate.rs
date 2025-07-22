@@ -3,7 +3,9 @@ use crate::simulation::info::Info;
 use crate::simulation::{Event, EventKind, InfoKind, Simulation};
 use crate::train_lines::person::Person;
 use crate::train_lines::{Direction, StationId, Time, TrainId};
-use crate::utils::config::{AVG_SPEED_M_S, TIME_BETWEEN_SNAPSHOT};
+use crate::utils::config::{
+    AVG_SPEED_M_S, SNAPSHOT_TIME_PEOPLE_IN_STATION, SNAPSHOT_TIME_PEOPLE_SERVED,
+};
 use crate::utils::time::{from_minutes, from_seconds};
 use rand_distr::Distribution;
 use std::collections::VecDeque;
@@ -58,6 +60,10 @@ impl Simulation {
                 self.events.push(new_event);
                 info
             }
+            EventKind::FinishedWarmup => {
+                self.served_people_since_last_snapshot = 0;
+                InfoKind::FinishedWarmup
+            }
         };
 
         Ok(Info {
@@ -79,8 +85,18 @@ impl Simulation {
         }
 
         self.events.push(Event {
-            time: TIME_BETWEEN_SNAPSHOT,
+            time: SNAPSHOT_TIME_PEOPLE_IN_STATION,
             kind: EventKind::TimedSnapshot(SnapshotKind::PeopleInStation),
+        });
+
+        self.events.push(Event {
+            time: 0.0,
+            kind: EventKind::FinishedWarmup,
+        });
+
+        self.events.push(Event {
+            time: SNAPSHOT_TIME_PEOPLE_SERVED,
+            kind: EventKind::TimedSnapshot(SnapshotKind::PeopleServed),
         });
 
         let station_ids = self.graph.iter_station_id().copied().collect::<Vec<_>>();
@@ -105,11 +121,14 @@ impl Simulation {
     ) -> Result<(Event, InfoKind), String> {
         // let n_stations = self.graph.get_nodes_len();
         let station = self.graph.get_node_mut(station_id)?;
+
+        //for i in 0..random_people_count {
         let line_stop = station.get_random_line_stop()?;
         let direction = Direction::rand();
         line_stop
             .borrow_mut()
             .person_enter(direction, Person::new(time));
+        //}
 
         if self.next_train_id == 0 {
             return Err("No Train".to_string());
@@ -129,7 +148,7 @@ impl Simulation {
     }
 
     fn snapshot(&mut self, time: Time, snapshot_kind: SnapshotKind) -> Event {
-        match snapshot_kind {
+        let next_time = match snapshot_kind {
             SnapshotKind::PeopleInStation => {
                 let mut tot = 0;
                 for line in &self.lines {
@@ -143,11 +162,21 @@ impl Simulation {
                 }
                 self.logger
                     .println_people_in_station(time, &format!("{time}, {tot}, All lines"));
+
+                time + SNAPSHOT_TIME_PEOPLE_IN_STATION
             }
-        }
+            SnapshotKind::PeopleServed => {
+                let n_served = self.served_people_since_last_snapshot;
+                self.logger
+                    .println_people_served(time, &format!("{time}, {n_served}"));
+                self.served_people_since_last_snapshot = 0;
+
+                time + SNAPSHOT_TIME_PEOPLE_SERVED
+            }
+        };
 
         Event {
-            time: time + TIME_BETWEEN_SNAPSHOT,
+            time: next_time,
             kind: EventKind::TimedSnapshot(snapshot_kind),
         }
     }
@@ -210,6 +239,7 @@ impl Simulation {
                     );
                 }
 
+                self.served_people_since_last_snapshot += 1;
                 arr_time = step.get_dismount_time();
             }
         }

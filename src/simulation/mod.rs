@@ -11,8 +11,9 @@ pub use crate::simulation::event::{Event, EventKind};
 use crate::train_lines::line::Line;
 use crate::train_lines::train::Train;
 use crate::train_lines::{StationId, Time, TrainId};
-use crate::utils::config::{KM_BEFORE_CRASHING, TIME_AT_STATION, TIME_TO_RECOVER};
-use crate::utils::time::from_minutes;
+use crate::utils::config::{
+    AVERAGE_PEOPLE_ARRIVE_TIME, KM_BEFORE_CRASHING, TIME_AT_STATION, TIME_TO_RECOVER,
+};
 pub use info::InfoKind;
 use rand_distr::Exp;
 use std::collections::{BinaryHeap, HashMap, VecDeque};
@@ -32,6 +33,7 @@ pub struct Simulation {
     last_event_time: Time,
     distr_train_recovery_time: Exp<Time>,
     distr_m_before_crash: Exp<f64>,
+    served_people_since_last_snapshot: u32,
 }
 
 impl Simulation {
@@ -48,12 +50,13 @@ impl Simulation {
             last_event_time: start_time,
             distr_train_recovery_time: Exp::new(1.0 / TIME_TO_RECOVER).unwrap(),
             distr_m_before_crash: Exp::new(1.0 / (KM_BEFORE_CRASHING * 1000.0)).unwrap(),
+            served_people_since_last_snapshot: 0,
         };
 
         for (idx, data) in stations.iter().enumerate() {
             new.graph.add_node(
                 idx,
-                Station::new(&data.name, data.lat, data.lon, from_minutes(1.0)),
+                Station::new(&data.name, data.lat, data.lon, AVERAGE_PEOPLE_ARRIVE_TIME),
             );
         }
 
