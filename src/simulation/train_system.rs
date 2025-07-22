@@ -4,6 +4,7 @@ use crate::train_lines::line::Line;
 use crate::train_lines::train::Train;
 use crate::train_lines::{Direction, TrainId};
 use itertools::Itertools;
+use rand::distr::Distribution;
 use std::rc::Rc;
 
 const EDGE_MAX_CAPACITY: usize = 1;
@@ -53,10 +54,11 @@ impl Simulation {
     ) -> Result<TrainId, String> {
         let station_id = line.get(pos_in_line).ok_or("Invalid pos in line")?;
         let station = self.graph.get_node_mut(station_id)?;
+        let m_before_crash = self.distr_m_before_crash.sample(&mut rand::rng());
 
         let _ = self.trains.insert(
             self.next_train_id,
-            Train::new(Rc::clone(line), capacity, pos_in_line, dir)?,
+            Train::new(Rc::clone(line), capacity, pos_in_line, dir, m_before_crash)?,
         );
         station.train_enter();
         self.next_train_id += 1;

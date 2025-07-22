@@ -36,6 +36,18 @@ pub enum InfoKind {
         unloaded_passengers: usize,
         train_capacity: usize,
     },
+    TrainCrashed {
+        train_id: TrainId,
+        line_name: String,
+        from_station: String,
+        to_station: String,
+    },
+    TrainRecovered {
+        train_id: TrainId,
+        line_name: String,
+        from_station: String,
+        to_station: String,
+    },
     WaitingForEdge {
         train_id: TrainId,
         start_station_name: String,
@@ -92,9 +104,24 @@ impl fmt::Display for InfoKind {
                 f, // TODO add line name
                 "Train {train_id:?} waiting on free space on edge from '{start_station_name}' to '{end_station_name}'"
             ),
-            Self::TimedSnapshot(kind) => write!(
-                f, // TODO add line name
-                "Timed Snapshot: {kind:?}"
+            Self::TimedSnapshot(kind) => write!(f, "Timed Snapshot: {kind:?}"),
+            Self::TrainCrashed {
+                train_id,
+                line_name,
+                from_station,
+                to_station,
+            } => write!(
+                f,
+                "Train {train_id:?} crashed when in line {line_name} from '{from_station}' to '{to_station}'"
+            ),
+            Self::TrainRecovered {
+                train_id,
+                line_name,
+                from_station,
+                to_station,
+            } => write!(
+                f,
+                "Train {train_id:?} recovered when in line {line_name} from '{from_station}' to '{to_station}'"
             ),
         }
     }

@@ -21,7 +21,7 @@ pub const fn from_seconds(seconds: f64) -> Time {
 pub fn fmt_time(mut time: Time) -> String {
     let days = if (time / 24.0).trunc() >= 1.0 {
         let tmp_day = (time / 24.0).trunc();
-        time /= 24.0;
+        time %= 24.0;
         tmp_day
     } else {
         0.0

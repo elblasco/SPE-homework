@@ -17,9 +17,9 @@ filtered: dict = {
     "All": ([], [], "General Board Time (minutes)"),
     "U1": ([], [], "Board Time U1 (minutes)"),
     "U2": ([], [], "Board Time U2 (minutes)"),
-    "U3": ([], [], "Board Time U3 (minutes))"),
-    "U4": ([], [], "Board Time U4 (minutes))"),
-    "U6": ([], [], "Board Time U6 (minutes))"),
+    "U3": ([], [], "Board Time U3 (minutes)"),
+    "U4": ([], [], "Board Time U4 (minutes)"),
+    "U6": ([], [], "Board Time U6 (minutes)"),
 }
 
 next(csv_reader)
@@ -74,10 +74,13 @@ for idx, value in enumerate(filtered.values()):
     n = len(li)
     x = [i / n for i in range(n)]
 
-    ax[int(idx / 3)][idx % 3].plot(x, li, label=name)
+    ax[int(idx / 3)][idx % 3].axline((0, 0), slope=1)
+    ax[int(idx / 3)][idx % 3].plot(x, li, label=name, color='red')
     ax[int(idx / 3)][idx % 3].legend(loc="upper right")
-    single_lorenz_ax.plot(x, li, label=name)
-    single_lorenz_ax.legend(loc="upper right")
-    single_lorenz_fig.savefig(f"lorenz-{idx}.svg")
 
-fig.savefig('lorenz-tot.svg')
+    single_lorenz_ax.axline((0, 0), slope=1)
+    single_lorenz_ax.plot(x, li, label=name, color='red')
+    single_lorenz_ax.legend(loc="upper right")
+    single_lorenz_fig.savefig(f"./img/lorenz/lorenz-{idx}.svg")
+
+fig.savefig('./img/lorenz/lorenz.svg')

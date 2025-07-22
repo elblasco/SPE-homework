@@ -4,8 +4,8 @@ mod simulate;
 mod train_system;
 
 use crate::dataset::StationData;
-use crate::graph::Graph;
 use crate::graph::node::Station;
+use crate::graph::Graph;
 use crate::logger::Logger;
 pub use crate::simulation::event::{Event, EventKind};
 use crate::train_lines::line::Line;
@@ -29,10 +29,15 @@ pub struct Simulation {
     train_waiting: HashMap<(StationId, StationId), VecDeque<TrainId>>,
     logger: Logger,
     last_event_time: Time,
+    distr_train_recovery_time: Exp<Time>,
+    distr_m_before_crash: Exp<f64>,
 }
 
 impl Simulation {
     pub const TIME_BETWEEN_SNAPSHOT: Time = from_seconds(5.0);
+    pub const TIME_TO_RECOVER: Time = from_minutes(30.0);
+    pub const TIME_AT_STATION: Time = from_seconds(20.0);
+    pub const KM_BEFORE_CRASHING: f64 = 10.0;
 
     pub fn new(start_time: Time, end_time: Time, stations: &[StationData]) -> Self {
         let mut new = Self {
@@ -41,10 +46,12 @@ impl Simulation {
             trains: HashMap::new(),
             next_train_id: 0,
             events: Self::get_initial_events(start_time, end_time),
-            distr_train_at_station: Exp::new(1.0 / from_seconds(20.0)).unwrap(),
+            distr_train_at_station: Exp::new(1.0 / Self::TIME_AT_STATION).unwrap(),
             train_waiting: HashMap::new(),
             logger: Logger::new(),
             last_event_time: start_time,
+            distr_train_recovery_time: Exp::new(1.0 / Self::TIME_TO_RECOVER).unwrap(),
+            distr_m_before_crash: Exp::new(1.0 / (Self::KM_BEFORE_CRASHING * 1000.0)).unwrap(),
         };
 
         for (idx, data) in stations.iter().enumerate() {
