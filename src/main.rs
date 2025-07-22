@@ -82,7 +82,7 @@ fn simulate(mut system: Simulation) {
                     } else {
                         println!("Currently at time: {}", fmt_time(last_printed_time));
                     }
-                };
+                }
 
                 #[cfg(debug_assertions)]
                 match info.kind {
