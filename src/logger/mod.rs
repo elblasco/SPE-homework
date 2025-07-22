@@ -7,6 +7,7 @@ pub struct Logger {
     delay: BufWriter<File>,
     people_in_stations: BufWriter<File>,
     time_to_board: BufWriter<File>,
+    people_served: BufWriter<File>,
 }
 
 impl Logger {
@@ -26,6 +27,9 @@ impl Logger {
             time_to_board: BufWriter::new(
                 File::create("output/board_time.csv").expect("Cannot create log file"),
             ),
+            people_served: BufWriter::new(
+                File::create("output/people_served.csv").expect("Cannot create log file"),
+            ),
         };
 
         new.print_headers();
@@ -39,6 +43,9 @@ impl Logger {
         self.people_in_stations
             .flush()
             .expect("Could not flush log file");
+        self.people_served
+            .flush()
+            .expect("Could not flush log file");
         self.delay.flush().expect("Could not flush log file");
     }
 
@@ -46,6 +53,7 @@ impl Logger {
         self.println_delay(0.0, "Expected Time, Real Time, Line Name");
         self.println_people_in_station(0.0, "Time, People, Station Name");
         self.println_time_to_board(0.0, "Time (h), StationId, Line Name, Time To Board (min)");
+        self.println_people_served(0.0, "Time, People Served Since Last Interval");
     }
 
     fn println_to_file(file: &mut BufWriter<File>, str: &str) {
@@ -61,6 +69,12 @@ impl Logger {
     pub fn println_people_in_station(&mut self, time: Time, str: &str) {
         if time >= 0.0 {
             Self::println_to_file(&mut self.people_in_stations, str);
+        }
+    }
+
+    pub fn println_people_served(&mut self, time: Time, str: &str) {
+        if time >= 0.0 {
+            Self::println_to_file(&mut self.people_served, str);
         }
     }
 

@@ -53,6 +53,7 @@ pub enum InfoKind {
         start_station_name: String,
         end_station_name: String,
     },
+    FinishedWarmup,
 }
 
 impl fmt::Display for Info {
@@ -123,6 +124,7 @@ impl fmt::Display for InfoKind {
                 f,
                 "Train {train_id:?} recovered when in line {line_name} from '{from_station}' to '{to_station}'"
             ),
+            Self::FinishedWarmup => write!(f, "Finished warmup"),
         }
     }
 }

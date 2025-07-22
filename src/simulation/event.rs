@@ -4,6 +4,7 @@ use std::cmp::Ordering;
 #[derive(Debug, Clone)]
 pub enum SnapshotKind {
     PeopleInStation,
+    PeopleServed,
 }
 
 #[derive(Debug, Clone)]
@@ -17,6 +18,7 @@ pub enum EventKind {
     TrainRecover { train_id: TrainId, remaining_m: f64 },
     PersonArrive(StationId),
     // TrainDepart -> travel (partial) [crash shed]  ------  crash ----    recovery  -----  Travel partial 2 [trainArrive]
+    FinishedWarmup,
 }
 
 #[derive(Debug, Clone)]
