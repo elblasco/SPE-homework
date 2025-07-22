@@ -2,8 +2,8 @@ use crate::simulation::event::SnapshotKind;
 use crate::simulation::info::Info;
 use crate::simulation::{Event, EventKind, InfoKind, Simulation};
 use crate::train_lines::person::Person;
-use crate::train_lines::train::Train;
 use crate::train_lines::{Direction, StationId, Time, TrainId};
+use crate::utils::config::{AVG_SPEED_M_S, TIME_BETWEEN_SNAPSHOT};
 use crate::utils::time::{from_minutes, from_seconds};
 use rand_distr::Distribution;
 use std::collections::VecDeque;
@@ -79,7 +79,7 @@ impl Simulation {
         }
 
         self.events.push(Event {
-            time: Self::TIME_BETWEEN_SNAPSHOT,
+            time: TIME_BETWEEN_SNAPSHOT,
             kind: EventKind::TimedSnapshot(SnapshotKind::PeopleInStation),
         });
 
@@ -147,7 +147,7 @@ impl Simulation {
         }
 
         Event {
-            time: time + Self::TIME_BETWEEN_SNAPSHOT,
+            time: time + TIME_BETWEEN_SNAPSHOT,
             kind: EventKind::TimedSnapshot(snapshot_kind),
         }
     }
@@ -179,7 +179,7 @@ impl Simulation {
                 time,
                 &format!(
                     "{}, {}, {}",
-                    from_seconds(edge.get_distance_m() / Train::AVG_SPEED_M_S) * 3600.0,
+                    from_seconds(edge.get_distance_m() / AVG_SPEED_M_S) * 3600.0,
                     (time - train.get_depart_time()) * 3600.0,
                     train.get_line_name()
                 ),

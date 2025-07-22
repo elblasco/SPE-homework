@@ -3,11 +3,10 @@ use crate::simulation::Simulation;
 use crate::train_lines::line::Line;
 use crate::train_lines::train::Train;
 use crate::train_lines::{Direction, TrainId};
+use crate::utils::config::EDGE_MAX_CAPACITY;
 use itertools::Itertools;
 use rand::distr::Distribution;
 use std::rc::Rc;
-
-const EDGE_MAX_CAPACITY: usize = 1;
 
 impl Simulation {
     pub fn add_line(&mut self, line_data: &LineData) -> Result<Rc<Line>, String> {

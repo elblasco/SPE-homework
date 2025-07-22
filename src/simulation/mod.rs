@@ -11,7 +11,8 @@ pub use crate::simulation::event::{Event, EventKind};
 use crate::train_lines::line::Line;
 use crate::train_lines::train::Train;
 use crate::train_lines::{StationId, Time, TrainId};
-use crate::utils::time::{from_minutes, from_seconds};
+use crate::utils::config::{KM_BEFORE_CRASHING, TIME_AT_STATION, TIME_TO_RECOVER};
+use crate::utils::time::from_minutes;
 pub use info::InfoKind;
 use rand_distr::Exp;
 use std::collections::{BinaryHeap, HashMap, VecDeque};
@@ -34,11 +35,6 @@ pub struct Simulation {
 }
 
 impl Simulation {
-    pub const TIME_BETWEEN_SNAPSHOT: Time = from_seconds(5.0);
-    pub const TIME_TO_RECOVER: Time = from_minutes(30.0);
-    pub const TIME_AT_STATION: Time = from_seconds(20.0);
-    pub const KM_BEFORE_CRASHING: f64 = 10.0;
-
     pub fn new(start_time: Time, end_time: Time, stations: &[StationData]) -> Self {
         let mut new = Self {
             graph: Graph::new(),
@@ -46,12 +42,12 @@ impl Simulation {
             trains: HashMap::new(),
             next_train_id: 0,
             events: Self::get_initial_events(start_time, end_time),
-            distr_train_at_station: Exp::new(1.0 / Self::TIME_AT_STATION).unwrap(),
+            distr_train_at_station: Exp::new(1.0 / TIME_AT_STATION).unwrap(),
             train_waiting: HashMap::new(),
             logger: Logger::new(),
             last_event_time: start_time,
-            distr_train_recovery_time: Exp::new(1.0 / Self::TIME_TO_RECOVER).unwrap(),
-            distr_m_before_crash: Exp::new(1.0 / (Self::KM_BEFORE_CRASHING * 1000.0)).unwrap(),
+            distr_train_recovery_time: Exp::new(1.0 / TIME_TO_RECOVER).unwrap(),
+            distr_m_before_crash: Exp::new(1.0 / (KM_BEFORE_CRASHING * 1000.0)).unwrap(),
         };
 
         for (idx, data) in stations.iter().enumerate() {

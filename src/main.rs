@@ -7,9 +7,10 @@
 
 use crate::dataset::Dataset;
 use crate::simulation::{InfoKind, Simulation};
+use crate::train_lines::Direction;
 use crate::train_lines::line::Line;
-use crate::train_lines::{Direction, Time};
-use crate::utils::time::{fmt_time, from_days, from_hour};
+use crate::utils::config::{PRINT_INTERVAL, SIM_LEN, TRAIN_CAPACITY, TRAIN_PER_LINE, WARMUP_TIME};
+use crate::utils::time::fmt_time;
 use rand::Rng;
 use std::fs::File;
 use std::rc::Rc;
@@ -42,10 +43,6 @@ fn add_test_train(
     Ok(())
 }
 
-const WARMUP_TIME: Time = from_days(10.0);
-const SIM_LEN: Time = from_days(20.0);
-const PRINT_INTERVAL: Time = from_hour(6.0);
-
 fn main() {
     let file = File::open("datasets/Wien.json").expect("Cannot open file");
     let dataset =
@@ -59,7 +56,7 @@ fn main() {
         lines.push(new_line);
     }
 
-    add_test_train(&mut system, &lines, 10, 10).unwrap();
+    add_test_train(&mut system, &lines, TRAIN_PER_LINE, TRAIN_CAPACITY).unwrap();
     simulate(system);
 }
 

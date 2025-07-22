@@ -2,6 +2,7 @@ use crate::graph::node::Station;
 use crate::train_lines::line::Line;
 use crate::train_lines::person::Person;
 use crate::train_lines::{Direction, StationId, Time};
+use crate::utils::config::{AVG_SPEED_M_S, MAX_SPEED_M_S, MIN_SPEED_M_S};
 use rand::Rng;
 use rand::seq::SliceRandom;
 use rand_distr::Distribution;
@@ -24,9 +25,6 @@ pub struct Train {
 impl Train {
     // The average speed is 32.5 km/h accordin to:
     // https://homepage.univie.ac.at/horst.prillinger/ubahn/english/facts.html
-    pub const AVG_SPEED_M_S: f64 = 30.0 / 3.6;
-    pub const MAX_SPEED_M_S: f64 = 50.0 / 3.6;
-    pub const MIN_SPEED_M_S: f64 = 10.0 / 3.6;
 
     pub fn new(
         line: Rc<Line>,
@@ -43,7 +41,7 @@ impl Train {
             line,
             pos_in_line,
             direction,
-            speed_distribution: Normal::new(Self::AVG_SPEED_M_S, 0.5).unwrap(),
+            speed_distribution: Normal::new(AVG_SPEED_M_S, 0.5).unwrap(),
             depart_time: 0.0,
             remaining_m,
         })
@@ -141,7 +139,7 @@ impl Train {
     pub fn get_speed_m_s(&self) -> f64 {
         self.speed_distribution
             .sample(&mut rand::rng())
-            .clamp(Self::MIN_SPEED_M_S, Self::MAX_SPEED_M_S)
+            .clamp(MIN_SPEED_M_S, MAX_SPEED_M_S)
     }
 
     pub fn set_depart_time(&mut self, depart_time: Time) {
