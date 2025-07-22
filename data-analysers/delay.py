@@ -15,7 +15,14 @@ lines: list = []
 next(csv_reader)
 
 for line in csv_reader:
-    time_percentage.append(float(line[1]) / float(line[0]))
+    real_time = float(line[1])
+    expected_time = float(line[0])
+    if real_time > expected_time:
+        time_rap = real_time / expected_time - 1.0
+    else:
+        time_rap = 1.0 - expected_time / real_time
+
+    time_percentage.append(time_rap)
     lines.append(line[2].strip())
 
 filtered: list = [
@@ -28,23 +35,26 @@ filtered: list = [
 ]
 
 names = [
-    "Totals delay",
-    "Delay U1",
-    "Delay U2",
-    "Delay U3",
-    "Delay U4",
-    "Delay U6",
+    "Totals % delay over average (logarithm % and value)",
+    "U1 % delay over average (logarithm % and value)",
+    "U2 % delay over average (logarithm % and value)",
+    "U3 % delay over average (logarithm % and value)",
+    "U4 % delay over average (logarithm % and value)",
+    "U6 % delay over average (logarithm % and value)",
 ]
 
 fig, ax = plt.subplots(2, 3)
+fig.set_size_inches(20, 15)
+
 for i in range(2):
     for j in range(3):
         el = i * 3 + j
-        ax[i][j].hist(filtered[el], bins=40, label=names[el])
+        ax[i][j].hist(filtered[el], bins=60, label=names[el], log=True)
 
         mean = np.mean(filtered[el])
         ax[i][j].axvline(x=mean, color='r', linestyle='dashed', label="Mean")
         ax[i][j].legend(loc="upper right")
 
         print(names[el], mean)
-plt.show()
+
+fig.savefig('./img/delay/delay.svg')

@@ -42,6 +42,22 @@ impl Simulation {
                 self.events.push(new_event);
                 InfoKind::TimedSnapshot(kind)
             }
+            EventKind::TrainCrash {
+                train_id,
+                remaining_m,
+            } => {
+                let (new_event, info) = self.train_crash(time, train_id, remaining_m)?;
+                self.events.push(new_event);
+                info
+            }
+            EventKind::TrainRecover {
+                train_id,
+                remaining_m,
+            } => {
+                let (new_event, info) = self.train_recover(time, train_id, remaining_m)?;
+                self.events.push(new_event);
+                info
+            }
         };
 
         Ok(Info {
@@ -159,28 +175,40 @@ impl Simulation {
             edge.train_exit()
                 .map_err(|err_str: String| format!("Cannot remove train because {err_str}"))?;
 
+            self.logger.println_delay(
+                time,
+                &format!(
+                    "{}, {}, {}",
+                    from_seconds(edge.get_distance_m() / Train::AVG_SPEED_M_S) * 3600.0,
+                    (time - train.get_depart_time()) * 3600.0,
+                    train.get_line_name()
+                ),
+            );
+
             time + self.distr_train_at_station.sample(&mut rand::rng())
         };
 
         train.go_next_stop();
         let arrival_station = self.graph.get_node(end)?;
-        // TODO maybe we should do something with them
+
         let (unloaded_passengers, exiting_from_system) =
             train.unload_people_at_curr_station(arrival_station, time)?;
 
         for person in exiting_from_system {
             let mut arr_time = person.get_arrival_time();
             for step in person.iter_steps() {
-                self.logger.println_time_to_board(
-                    time,
-                    &format!(
-                        "{}, {}, {}, {}",
-                        arr_time,
-                        step.get_from_station_id(),
-                        step.get_line_name(),
-                        (step.get_board_time() - arr_time) * 60.0,
-                    ),
-                );
+                if arr_time >= 0.0 {
+                    self.logger.println_time_to_board(
+                        time,
+                        &format!(
+                            "{}, {}, {}, {}",
+                            arr_time,
+                            step.get_from_station_id(),
+                            step.get_line_name(),
+                            (step.get_board_time() - arr_time) * 60.0,
+                        ),
+                    );
+                }
 
                 arr_time = step.get_dismount_time();
             }
@@ -229,6 +257,16 @@ impl Simulation {
 
         let loaded_passengers = train.load_people_at_curr_station(time)?;
 
+        let departure_station = self.graph.get_node(start)?;
+        let info_train_depart = InfoKind::TrainDeparture {
+            train_id,
+            line_name: train.get_line_name(),
+            departing_station_name: departure_station.get_name(),
+            total_passengers: train.get_n_passengers(),
+            loaded_passengers,
+            train_capacity: train.get_max_passenger(),
+        };
+
         let arrival_time = if start == end {
             time + from_minutes(1.0)
         } else {
@@ -265,34 +303,114 @@ impl Simulation {
             edge.train_enter()
                 .map_err(|err_str: String| format!("Cannot instert train because {err_str}"))?;
 
-            let arrival = time + from_seconds(edge.get_distance_m() / (train.get_speed_m_s()));
-            self.logger.println_delay(
-                time,
-                &format!(
-                    "{}, {}, {}",
-                    from_seconds(edge.get_distance_m() / Train::AVG_SPEED_M_S) * 3600.0,
-                    (arrival - train.get_depart_time()) * 3600.0,
-                    train.get_line_name()
-                ),
-            );
-            arrival
-        };
+            if let Err(m_before_crash) = train.add_distance_m(edge.get_distance_m()) {
+                let m_after_crash = edge.get_distance_m() - m_before_crash;
+                let crash_time = time + from_seconds(m_before_crash / train.get_speed_m_s());
 
-        let departure_station = self.graph.get_node(start)?;
+                return Ok((
+                    Some(Event {
+                        time: crash_time,
+                        kind: EventKind::TrainCrash {
+                            train_id,
+                            remaining_m: m_after_crash,
+                        },
+                    }),
+                    info_train_depart,
+                ));
+            }
+
+            time + from_seconds(edge.get_distance_m() / (train.get_speed_m_s()))
+        };
 
         Ok((
             Some(Event {
                 time: arrival_time,
                 kind: EventKind::TrainArrive(train_id),
             }),
-            InfoKind::TrainDeparture {
+            info_train_depart,
+        ))
+    }
+
+    fn train_crash(
+        &mut self,
+        time: Time,
+        train_id: TrainId,
+        remaining_m: f64,
+    ) -> Result<(Event, InfoKind), String> {
+        let recover_time = time + self.distr_train_recovery_time.sample(&mut rand::rng());
+
+        let train = self
+            .trains
+            .get_mut(&train_id)
+            .ok_or("Train does not exist")?;
+
+        let from_station = self.graph.get_node(train.get_curr_station())?.get_name();
+        let to_station = self.graph.get_node(train.get_next_station().0)?.get_name();
+
+        Ok((
+            Event {
+                time: recover_time,
+                kind: EventKind::TrainRecover {
+                    train_id,
+                    remaining_m,
+                },
+            },
+            InfoKind::TrainCrashed {
                 train_id,
                 line_name: train.get_line_name(),
-                departing_station_name: departure_station.get_name(),
-                total_passengers: train.get_n_passengers(),
-                loaded_passengers,
-                train_capacity: train.get_max_passenger(),
+                from_station,
+                to_station,
             },
+        ))
+    }
+
+    fn train_recover(
+        &mut self,
+        time: Time,
+        train_id: TrainId,
+        remaining_m: f64,
+    ) -> Result<(Event, InfoKind), String> {
+        let train = self
+            .trains
+            .get_mut(&train_id)
+            .ok_or("Train does not exist")?;
+
+        let from_station = self.graph.get_node(train.get_curr_station())?.get_name();
+        let to_station = self.graph.get_node(train.get_next_station().0)?.get_name();
+
+        let recover_info = InfoKind::TrainRecovered {
+            train_id,
+            line_name: train.get_line_name(),
+            from_station,
+            to_station,
+        };
+
+        let autonomy_m = self.distr_m_before_crash.sample(&mut rand::rng());
+        train.fixup_train(autonomy_m);
+
+        if let Err(m_before_crash) = train.add_distance_m(remaining_m) {
+            let m_after_crash = remaining_m - m_before_crash;
+            let crash_time = time + from_seconds(m_before_crash / train.get_speed_m_s());
+
+            return Ok((
+                Event {
+                    time: crash_time,
+                    kind: EventKind::TrainCrash {
+                        train_id,
+                        remaining_m: m_after_crash,
+                    },
+                },
+                recover_info,
+            ));
+        }
+
+        let arrival_time = time + from_seconds(remaining_m / train.get_speed_m_s());
+        Ok((
+            Event {
+                time: arrival_time,
+                kind: EventKind::TrainArrive(train_id),
+            },
+            recover_info,
         ))
     }
 }

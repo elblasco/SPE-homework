@@ -6,6 +6,7 @@ use rand::Rng;
 use rand::seq::SliceRandom;
 use rand_distr::Distribution;
 use rand_distr::Normal;
+use std::ops::SubAssign;
 use std::rc::Rc;
 
 #[derive(Debug)]
@@ -17,6 +18,7 @@ pub struct Train {
     direction: Direction,
     speed_distribution: Normal<f64>,
     depart_time: Time,
+    remaining_m: f64,
 }
 
 impl Train {
@@ -31,6 +33,7 @@ impl Train {
         max_passengers: usize,
         pos_in_line: usize,
         direction: Direction,
+        remaining_m: f64,
     ) -> Result<Self, String> {
         line.get(pos_in_line).ok_or("Invalid position in line")?;
 
@@ -42,6 +45,7 @@ impl Train {
             direction,
             speed_distribution: Normal::new(Self::AVG_SPEED_M_S, 0.5).unwrap(),
             depart_time: 0.0,
+            remaining_m,
         })
     }
 
@@ -114,7 +118,6 @@ impl Train {
         let mut unloaded_people = self.passengers.drain(0..n_people).collect::<Vec<_>>();
 
         for p in &mut unloaded_people {
-            // TODO CHECK station vs curr_station
             p.record_dismount(time, self.get_curr_station())?;
         }
 
@@ -147,5 +150,22 @@ impl Train {
 
     pub fn get_depart_time(&self) -> Time {
         self.depart_time
+    }
+
+    // Return Ok(()) if the train does not need to crash
+    // Return Err(f64) with f64 the distance in the edge before crashing
+    pub fn add_distance_m(&mut self, additional_distance: f64) -> Result<(), f64> {
+        if self.remaining_m >= additional_distance {
+            self.remaining_m.sub_assign(additional_distance);
+            Ok(())
+        } else {
+            let rem = self.remaining_m;
+            self.remaining_m = 0.0;
+            Err(rem)
+        }
+    }
+
+    pub fn fixup_train(&mut self, new_distance_m: f64) {
+        self.remaining_m = new_distance_m;
     }
 }

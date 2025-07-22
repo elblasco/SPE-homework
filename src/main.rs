@@ -42,9 +42,9 @@ fn add_test_train(
     Ok(())
 }
 
-const WARMUP_TIME: Time = from_days(100.0);
-const SIM_LEN: Time = from_days(10.0);
-const PRINT_INTERVAL: Time = from_hour(2.0);
+const WARMUP_TIME: Time = from_days(10.0);
+const SIM_LEN: Time = from_days(20.0);
+const PRINT_INTERVAL: Time = from_hour(6.0);
 
 fn main() {
     let file = File::open("datasets/Wien.json").expect("Cannot open file");
@@ -59,7 +59,7 @@ fn main() {
         lines.push(new_line);
     }
 
-    add_test_train(&mut system, &lines, 5, 200).unwrap();
+    add_test_train(&mut system, &lines, 10, 10).unwrap();
     simulate(system);
 }
 
@@ -73,8 +73,10 @@ fn simulate(mut system: Simulation) {
 
         match result {
             Ok(info) => {
-                if system.get_last_event_time() > last_printed_time + PRINT_INTERVAL {
-                    last_printed_time = system.get_last_event_time();
+                let time = system.get_last_event_time();
+
+                if time > last_printed_time + PRINT_INTERVAL {
+                    last_printed_time = time;
                     if last_printed_time < 0.0 {
                         println!("Missing warmup time: {}", fmt_time(-last_printed_time));
                     } else {
@@ -86,7 +88,18 @@ fn simulate(mut system: Simulation) {
                 match info.kind {
                     InfoKind::PersonArrived { .. } | InfoKind::TimedSnapshot { .. } => {}
                     _ => {
-                        println!("LOG {} -> {}", fmt_time(info.time), info.kind);
+                        let period = if time >= 0.0 {
+                            ""
+                        } else {
+                            " WARMUP remaining "
+                        };
+
+                        println!(
+                            "LOG {} {} -> {}",
+                            period,
+                            fmt_time(f64::abs(time)),
+                            info.kind
+                        );
                     }
                 }
 
