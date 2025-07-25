@@ -16,7 +16,7 @@ pub const SIM_LEN: Time = from_days(20.0);
 pub const PRINT_INTERVAL: Time = from_hour(6.0);
 
 pub const TRAIN_CAPACITY: usize = 800;
-pub const TRAIN_PER_LINE: usize = 3;
+pub const TRAIN_PER_LINE: usize = 5;
 
 pub const AVERAGE_PEOPLE_ARRIVE_TIME: Time = from_seconds(10.0);
 
