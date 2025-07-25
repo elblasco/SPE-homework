@@ -17,7 +17,7 @@ n_people: list = []
 next(csv_reader)
 
 for line in csv_reader:
-    arrival_times_h.append(float(line[0]))
+    arrival_times_h.append(float(line[0]) / 24.0)
     lines.append(line[2].strip())
     board_times_min.append(float(line[3]))
     n_people.append(float(line[4]))
@@ -37,43 +37,51 @@ filtered: list = [
 ]
 
 names = [
-    "General Board Time (minutes)",
-    "Board Time U1 (minutes)",
-    "Board Time U2 (minutes)",
-    "Board Time U3 (minutes)",
-    "Board Time U4 (minutes)",
-    "Board Time U6 (minutes)",
+    "General board time",
+    "Board time U1",
+    "Board time U2",
+    "Board time U3",
+    "Board time U4",
+    "Board time U6",
 ]
 
 fig, ax = plt.subplots(3, 4)
 fig.set_size_inches(20, 15)
 
 for el in range(6):
-    single_board_fig, single_board_ax = plt.subplots(1, 1)
-    single_board_fig.set_size_inches(20, 15)
+    single_hist, single_hist_ax = plt.subplots(1, 1)
+    single_hist.set_size_inches(20, 15)
+
+    single_plot, single_plot_ax = plt.subplots(1, 1)
+    single_plot.set_size_inches(20, 15)
 
     i = el % 3
     j = int(el / 3) * 2
 
-    print("currently at index", el)
+    print("Processing", names[el])
     times, arrival_times, n_people = filtered[el]
 
     ax[i][j].hist(times, bins=40, label=names[el], density=True)
-    ax[i][j + 1].plot(arrival_times, times, label=(names[el] + " over hours"))
-    single_board_ax.hist(times, weights=n_people, bins=40, label=names[el], density=True)
-    # single_board_ax.plot(arrival_times, times, label=(names[el] + " over hours"))
+    ax[i][j + 1].plot(arrival_times, times, label=names[el])
+    ax[i][j + 1].set_xlabel("Time since simulation start (days)")
+    ax[i][j + 1].set_ylabel("Time to board (minute)")
+    single_hist_ax.hist(times, weights=n_people, bins=40, label=names[el], density=True)
+    single_plot_ax.plot(arrival_times, times, label=names[el])
+    single_plot_ax.set_xlabel("Time since simulation start (days)")
+    single_plot_ax.set_ylabel("Time to board (minute)")
 
     mean = np.mean(times)
     ax[i][j].axvline(x=mean, color='r', linestyle='dashed', label="Mean (minutes)")
     ax[i][j + 1].axhline(y=mean, color='r', linestyle='dashed', label="Mean (minutes)")
-    # single_board_ax.axvline(x=mean, color='r', linestyle='dashed', label="Mean (minutes)")
-    # single_board_ax.axhline(y=mean, color='r', linestyle='dashed', label="Mean (minutes)")
-    print(names[el], mean, "the first numbers are", times[0:20])
+    single_hist_ax.axvline(x=mean, color='r', linestyle='dashed', label="Mean (minutes)")
+    single_plot_ax.axhline(y=mean, color='r', linestyle='dashed', label="Mean (minutes)")
 
     ax[i][j].legend(loc="upper right")
     ax[i][j + 1].legend(loc="upper right")
-    single_board_ax.legend(loc="upper right")
+    single_hist_ax.legend(loc="upper right")
+    single_plot_ax.legend(loc="upper right")
 
-    single_board_fig.savefig(f"./img/board_time/board_time-{names[el]}.svg")
+    single_hist.savefig(f"./img/board_time/time-{names[el]}.svg")
+    single_plot.savefig(f"./img/board_time/evolution-{names[el]}.svg")
 
 fig.savefig('./img/board_time/board_time.svg')
