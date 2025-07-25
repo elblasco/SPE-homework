@@ -3,8 +3,8 @@ use crate::train_lines::line::Line;
 use crate::train_lines::person::Person;
 use crate::train_lines::{Direction, StationId, Time};
 use crate::utils::config::{AVG_SPEED_M_S, MAX_SPEED_M_S, MIN_SPEED_M_S};
-use rand::Rng;
 use rand::seq::SliceRandom;
+use rand::Rng;
 use rand_distr::Distribution;
 use rand_distr::Normal;
 use std::ops::SubAssign;
@@ -76,7 +76,7 @@ impl Train {
     }
 
     // Returns number of people loaded at current station
-    pub fn load_people_at_curr_station(&mut self, time: Time) -> Result<usize, String> {
+    pub fn load_people_at_curr_station(&mut self, time: Time) -> Result<&[Person], String> {
         let line_stop = self
             .line
             .get_stop(self.pos_in_line)
@@ -91,10 +91,12 @@ impl Train {
             p.record_board(time, Rc::clone(&self.line), self.get_curr_station());
         }
 
-        let n_people = people.len();
+        let old_len = self.passengers.len();
         self.passengers.extend(people);
         assert!(self.get_n_passengers() <= self.max_passengers);
-        Ok(n_people)
+
+        let new_len = self.passengers.len();
+        Ok(&self.passengers[old_len..new_len])
     }
 
     // Returns number of people unloaded at current station

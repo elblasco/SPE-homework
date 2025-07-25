@@ -7,12 +7,12 @@ pub const MIN_SPEED_M_S: f64 = 10.0 / 3.6;
 
 pub const EDGE_MAX_CAPACITY: usize = 1;
 
-pub const TIME_TO_RECOVER: Time = from_minutes(30.0);
+pub const TIME_TO_RECOVER: Time = from_minutes(20.0);
 pub const TIME_AT_STATION: Time = from_seconds(20.0);
-pub const KM_BEFORE_CRASHING: f64 = 10.0;
+pub const KM_BEFORE_CRASHING: f64 = 10_000.0;
 
-pub const WARMUP_TIME: Time = from_days(10.0);
-pub const SIM_LEN: Time = from_days(20.0);
+pub const WARMUP_TIME: Time = from_days(30.0);
+pub const SIM_LEN: Time = from_days(30.0);
 pub const PRINT_INTERVAL: Time = from_hour(6.0);
 
 pub const TRAIN_CAPACITY: usize = 800;

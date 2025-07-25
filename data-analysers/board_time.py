@@ -12,6 +12,7 @@ csv_reader = csv.reader(open('../output/board_time.csv', mode='r'))
 arrival_times_h: list = []
 board_times_min: list = []
 lines: list = []
+n_people: list = []
 
 next(csv_reader)
 
@@ -19,14 +20,20 @@ for line in csv_reader:
     arrival_times_h.append(float(line[0]))
     lines.append(line[2].strip())
     board_times_min.append(float(line[3]))
+    n_people.append(float(line[4]))
 
 filtered: list = [
-    (board_times_min, arrival_times_h),
-    zip(*[(time, arrival) for time, arrival, line in zip(board_times_min, arrival_times_h, lines) if line == "U1"]),
-    zip(*[(time, arrival) for time, arrival, line in zip(board_times_min, arrival_times_h, lines) if line == "U2"]),
-    zip(*[(time, arrival) for time, arrival, line in zip(board_times_min, arrival_times_h, lines) if line == "U3"]),
-    zip(*[(time, arrival) for time, arrival, line in zip(board_times_min, arrival_times_h, lines) if line == "U4"]),
-    zip(*[(time, arrival) for time, arrival, line in zip(board_times_min, arrival_times_h, lines) if line == "U6"]),
+    (board_times_min, arrival_times_h, n_people),
+    zip(*[(time, arrival, n_p) for time, arrival, line, n_p in zip(board_times_min, arrival_times_h, lines, n_people) if
+          line == "U1"]),
+    zip(*[(time, arrival, n_p) for time, arrival, line, n_p in zip(board_times_min, arrival_times_h, lines, n_people) if
+          line == "U2"]),
+    zip(*[(time, arrival, n_p) for time, arrival, line, n_p in zip(board_times_min, arrival_times_h, lines, n_people) if
+          line == "U3"]),
+    zip(*[(time, arrival, n_p) for time, arrival, line, n_p in zip(board_times_min, arrival_times_h, lines, n_people) if
+          line == "U4"]),
+    zip(*[(time, arrival, n_p) for time, arrival, line, n_p in zip(board_times_min, arrival_times_h, lines, n_people) if
+          line == "U6"]),
 ]
 
 names = [
@@ -41,31 +48,32 @@ names = [
 fig, ax = plt.subplots(3, 4)
 fig.set_size_inches(20, 15)
 
-for i in range(3):
-    for j in range(2):
-        #single_board_fig, single_board_ax = plt.subplots(1, 1)
-        #single_board_fig.set_size_inches(20, 15)
+for el in range(6):
+    single_board_fig, single_board_ax = plt.subplots(1, 1)
+    single_board_fig.set_size_inches(20, 15)
 
-        el = i * 2 + j
-        print("currently at index", el)
-        times, arrival_times = filtered[el]
-        ax[i][j].hist(times, bins=40, label=names[el])
-        ax[i][j + 1].plot(arrival_times, times, label=(names[el] + " over hours"))
-        #single_board_ax.hist(times, bins=40, label=names[el])
-        #single_board_ax.plot(arrival_times, times, label=(names[el] + " over hours"))
+    i = el % 3
+    j = int(el / 3) * 2
 
-        mean = np.mean(times)
-        ax[i][2 * j].axvline(x=mean, color='r', linestyle='dashed', label="Mean (minutes)")
-        ax[i][2 * j + 1].axhline(y=mean, color='r', linestyle='dashed', label="Mean (minutes)")
-        #single_board_ax.axvline(x=mean, color='r', linestyle='dashed', label="Mean (minutes)")
-        #single_board_ax.axhline(y=mean, color='r', linestyle='dashed', label="Mean (minutes)")
-        print(names[el], mean)
+    print("currently at index", el)
+    times, arrival_times, n_people = filtered[el]
 
-        ax[i][2 * j].legend(loc="upper right")
-        ax[i][2 * j + 1].legend(loc="upper right")
-        #single_board_ax.legend(loc="upper right")
-        #single_board_ax.legend(loc="upper right")
+    ax[i][j].hist(times, bins=40, label=names[el], density=True)
+    ax[i][j + 1].plot(arrival_times, times, label=(names[el] + " over hours"))
+    single_board_ax.hist(times, weights=n_people, bins=40, label=names[el], density=True)
+    # single_board_ax.plot(arrival_times, times, label=(names[el] + " over hours"))
 
-        #single_board_fig.savefig(f"./img/board/board-{names[el]}.svg")
+    mean = np.mean(times)
+    ax[i][j].axvline(x=mean, color='r', linestyle='dashed', label="Mean (minutes)")
+    ax[i][j + 1].axhline(y=mean, color='r', linestyle='dashed', label="Mean (minutes)")
+    # single_board_ax.axvline(x=mean, color='r', linestyle='dashed', label="Mean (minutes)")
+    # single_board_ax.axhline(y=mean, color='r', linestyle='dashed', label="Mean (minutes)")
+    print(names[el], mean, "the first numbers are", times[0:20])
+
+    ax[i][j].legend(loc="upper right")
+    ax[i][j + 1].legend(loc="upper right")
+    single_board_ax.legend(loc="upper right")
+
+    single_board_fig.savefig(f"./img/board_time/board_time-{names[el]}.svg")
 
 fig.savefig('./img/board_time/board_time.svg')

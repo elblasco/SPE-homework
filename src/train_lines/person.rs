@@ -1,21 +1,35 @@
 use crate::train_lines::line::Line;
 use crate::train_lines::{StationId, Time};
+use std::fmt::{Debug, Formatter};
 use std::rc::Rc;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Person {
     arrival_time: Time,
     steps: Vec<Step>,
     final_station_id: Option<StationId>,
 }
 
-#[derive(Debug)]
+#[derive(Clone)]
 pub struct Step {
     line_name: Rc<Line>,
     from_station_id: StationId,
     board_time: Time,
     // Initially equals to board time
     dismount_time: Time,
+}
+
+impl Debug for Step {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Step {{from: {}, line: {}, board time: {}, dismount time: {}}}",
+            self.from_station_id,
+            self.line_name.get_name(),
+            self.board_time,
+            self.dismount_time,
+        )
+    }
 }
 
 impl Person {
@@ -52,6 +66,15 @@ impl Person {
 
     pub fn get_arrival_time(&self) -> Time {
         self.arrival_time
+    }
+
+    pub fn get_last_arrival_time(&self) -> Time {
+        let Some(index) = self.steps.len().checked_sub(2) else {
+            return self.arrival_time;
+        };
+        self.steps
+            .get(index)
+            .map_or(self.arrival_time, |step| step.dismount_time)
     }
 
     pub fn iter_steps(&self) -> impl Iterator<Item = &Step> {

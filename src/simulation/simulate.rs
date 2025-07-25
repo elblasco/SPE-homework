@@ -214,7 +214,8 @@ impl Simulation {
                 ),
             );
 
-            time + self.distr_train_at_station.sample(&mut rand::rng())
+            let dt = self.distr_train_at_station.sample(&mut rand::rng());
+            time + dt
         };
 
         train.go_next_stop();
@@ -223,26 +224,7 @@ impl Simulation {
         let (unloaded_passengers, exiting_from_system) =
             train.unload_people_at_curr_station(arrival_station, time)?;
 
-        for person in exiting_from_system {
-            let mut arr_time = person.get_arrival_time();
-            for step in person.iter_steps() {
-                if arr_time >= 0.0 {
-                    self.logger.println_time_to_board(
-                        time,
-                        &format!(
-                            "{}, {}, {}, {}",
-                            arr_time,
-                            step.get_from_station_id(),
-                            step.get_line_name(),
-                            (step.get_board_time() - arr_time) * 60.0,
-                        ),
-                    );
-                }
-
-                self.served_people_since_last_snapshot += 1;
-                arr_time = step.get_dismount_time();
-            }
-        }
+        self.served_people_since_last_snapshot += exiting_from_system.len() as u32;
 
         let mut events = vec![Event {
             time: departure_time,
@@ -285,8 +267,31 @@ impl Simulation {
         let start = train.get_curr_station();
         let (end, _) = train.get_next_station();
 
+        let line_name = train.get_line_name().clone();
         let loaded_passengers = train.load_people_at_curr_station(time)?;
 
+        if !loaded_passengers.is_empty() && time >= 0.0 {
+            let n_elements = loaded_passengers.len() as f64;
+            let average = loaded_passengers
+                .iter()
+                .map(|p| time - p.get_last_arrival_time())
+                .map(|time| time / n_elements)
+                .sum::<Time>();
+
+            self.logger.println_time_to_board(
+                time,
+                &format!(
+                    "{}, {}, {}, {}, {}",
+                    time,
+                    start,
+                    line_name,
+                    average * 60.0,
+                    loaded_passengers.len()
+                ),
+            );
+        }
+
+        let loaded_passengers = loaded_passengers.len();
         let departure_station = self.graph.get_node(start)?;
         let info_train_depart = InfoKind::TrainDeparture {
             train_id,

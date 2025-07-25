@@ -52,7 +52,10 @@ impl Logger {
     fn print_headers(&mut self) {
         self.println_delay(0.0, "Expected Time, Real Time, Line Name");
         self.println_people_in_station(0.0, "Time, People, Station Name");
-        self.println_time_to_board(0.0, "Time (h), StationId, Line Name, Time To Board (min)");
+        self.println_time_to_board(
+            0.0,
+            "Time (h), StationId, Line Name, Time To Board (min), People Boarded",
+        );
         self.println_people_served(0.0, "Time, People Served Since Last Interval");
     }
 
