@@ -2,7 +2,7 @@ use crate::graph::node::Station;
 use crate::train_lines::line::Line;
 use crate::train_lines::person::Person;
 use crate::train_lines::{Direction, StationId, Time};
-use crate::utils::config::{AVG_SPEED_M_S, MAX_SPEED_M_S, MIN_SPEED_M_S};
+use crate::utils::config::{AVG_SPEED_M_S, MAX_SPEED_M_S, MIN_SPEED_M_S, VAR_SPEED};
 use rand::Rng;
 use rand::seq::SliceRandom;
 use rand_distr::Distribution;
@@ -41,7 +41,7 @@ impl Train {
             line,
             pos_in_line,
             direction,
-            speed_distribution: Normal::new(AVG_SPEED_M_S, 0.5).unwrap(),
+            speed_distribution: Normal::new(AVG_SPEED_M_S, VAR_SPEED).unwrap(),
             depart_time: 0.0,
             remaining_m,
         })
@@ -76,7 +76,7 @@ impl Train {
     }
 
     // Returns number of people loaded at current station
-    pub fn load_people_at_curr_station(&mut self, time: Time) -> Result<usize, String> {
+    pub fn load_people_at_curr_station(&mut self, time: Time) -> Result<&[Person], String> {
         let line_stop = self
             .line
             .get_stop(self.pos_in_line)
@@ -91,10 +91,12 @@ impl Train {
             p.record_board(time, Rc::clone(&self.line), self.get_curr_station());
         }
 
-        let n_people = people.len();
+        let old_len = self.passengers.len();
         self.passengers.extend(people);
         assert!(self.get_n_passengers() <= self.max_passengers);
-        Ok(n_people)
+
+        let new_len = self.passengers.len();
+        Ok(&self.passengers[old_len..new_len])
     }
 
     // Returns number of people unloaded at current station
@@ -137,9 +139,15 @@ impl Train {
     }
 
     pub fn get_speed_m_s(&self) -> f64 {
-        self.speed_distribution
-            .sample(&mut rand::rng())
-            .clamp(MIN_SPEED_M_S, MAX_SPEED_M_S)
+        let mut sampled;
+        loop {
+            sampled = self.speed_distribution.sample(&mut rand::rng());
+            if (MIN_SPEED_M_S..=MAX_SPEED_M_S).contains(&sampled) {
+                break;
+            }
+        }
+
+        sampled
     }
 
     pub fn set_depart_time(&mut self, depart_time: Time) {
