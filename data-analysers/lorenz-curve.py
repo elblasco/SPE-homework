@@ -1,12 +1,12 @@
 #!/usr/bin/env pyton3
 
 import csv
+import os
 
-# noinspection PyUnresolvedReferences
 import matplotlib.pyplot as plt
-# noinspection PyUnresolvedReferences
 import numpy as np
 
+os.makedirs("./img/lorenz", exist_ok=True)
 csv_reader = csv.reader(open('../output/board_time.csv', mode='r'))
 
 TIME_TO_BOARD = 0
@@ -14,13 +14,15 @@ LORENZ = 1
 NAME = 2
 
 filtered: dict = {
-    "All": ([], [], "General Board Time (minutes)"),
+    "all lines": ([], [], "General Board Time (minutes)"),
     "U1": ([], [], "Board Time U1 (minutes)"),
     "U2": ([], [], "Board Time U2 (minutes)"),
     "U3": ([], [], "Board Time U3 (minutes)"),
     "U4": ([], [], "Board Time U4 (minutes)"),
     "U6": ([], [], "Board Time U6 (minutes)"),
 }
+
+
 
 next(csv_reader)
 
@@ -32,10 +34,10 @@ for line in csv_reader:
 
     csv_entries.append((time_to_board_min, line))
 
-sorted(csv_entries, key=lambda x: x[TIME_TO_BOARD])
+csv_entries = sorted(csv_entries, key=lambda x: x[TIME_TO_BOARD])
 
 for time_to_board_min, line in csv_entries:
-    filtered["All"][TIME_TO_BOARD].append(time_to_board_min)
+    filtered["all lines"][TIME_TO_BOARD].append(time_to_board_min)
     filtered[line][TIME_TO_BOARD].append(time_to_board_min)
 
 for key in filtered.keys():
@@ -67,20 +69,23 @@ fig.set_size_inches(20, 15)
 
 for idx, value in enumerate(filtered.values()):
     single_lorenz_fig, single_lorenz_ax = plt.subplots(1, 1)
-    single_lorenz_fig.set_size_inches(20, 15)
+    plt.grid(True, axis="both", color='gray')
+    single_lorenz_fig.set_size_inches(5, 5)
     name = value[NAME]
     li = value[LORENZ]
 
     n = len(li)
     x = [i / n for i in range(n)]
 
-    ax[int(idx / 3)][idx % 3].axline((0, 0), slope=1)
-    ax[int(idx / 3)][idx % 3].plot(x, li, label=name, color='red')
-    ax[int(idx / 3)][idx % 3].legend(loc="upper right")
+    ax[int(idx / 3)][idx % 3].axline((0, 0), slope=1, label="Perfect fairness")
+    ax[int(idx / 3)][idx % 3].plot(x, li, label=f'Lorenz curve {list(filtered)[idx]}', color='red')
+    ax[int(idx / 3)][idx % 3].legend(loc="upper left")
+    ax[int(idx / 3)][idx % 3].grid(True, axis="both", color='gray')
 
-    single_lorenz_ax.axline((0, 0), slope=1)
-    single_lorenz_ax.plot(x, li, label=name, color='red')
-    single_lorenz_ax.legend(loc="upper right")
+    single_lorenz_ax.axline((0, 0), slope=1, label="Perfect fairness")
+    single_lorenz_ax.plot(x, li, label=f'Lorenz curve {list(filtered)[idx]}', color='red')
+    single_lorenz_ax.legend(loc="upper left")
+    single_lorenz_ax.grid(True, axis="both", color='gray')
     single_lorenz_fig.savefig(f"./img/lorenz/lorenz-{idx}.svg")
 
 fig.savefig('./img/lorenz/lorenz.svg')

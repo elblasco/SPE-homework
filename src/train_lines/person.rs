@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::train_lines::line::Line;
 use crate::train_lines::{StationId, Time};
 use std::fmt::{Debug, Formatter};

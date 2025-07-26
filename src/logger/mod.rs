@@ -50,7 +50,10 @@ impl Logger {
     }
 
     fn print_headers(&mut self) {
-        self.println_delay(0.0, "Expected Time, Real Time, Line Name");
+        self.println_delay(
+            0.0,
+            "Expected Time (Seconds), Real Time (Seconds), Line Name",
+        );
         self.println_people_in_station(0.0, "Time, People, Station Name");
         self.println_time_to_board(
             0.0,

@@ -208,9 +208,9 @@ impl Simulation {
                 time,
                 &format!(
                     "{}, {}, {}",
-                    from_seconds(edge.get_distance_m() / AVG_SPEED_M_S) * 3600.0,
+                    edge.get_distance_m() / AVG_SPEED_M_S,
                     (time - train.get_depart_time()) * 3600.0,
-                    train.get_line_name()
+                    train.get_line_name(),
                 ),
             );
 
@@ -224,7 +224,7 @@ impl Simulation {
         let (unloaded_passengers, exiting_from_system) =
             train.unload_people_at_curr_station(arrival_station, time)?;
 
-        self.served_people_since_last_snapshot += exiting_from_system.len() as u32;
+        self.served_people_since_last_snapshot += u32::try_from(exiting_from_system.len()).unwrap();
 
         let mut events = vec![Event {
             time: departure_time,
@@ -267,10 +267,11 @@ impl Simulation {
         let start = train.get_curr_station();
         let (end, _) = train.get_next_station();
 
-        let line_name = train.get_line_name().clone();
+        let line_name = train.get_line_name();
         let loaded_passengers = train.load_people_at_curr_station(time)?;
 
         if !loaded_passengers.is_empty() && time >= 0.0 {
+            #[allow(clippy::cast_precision_loss)]
             let n_elements = loaded_passengers.len() as f64;
             let average = loaded_passengers
                 .iter()
